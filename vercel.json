@@ -1,7 +1,5 @@
 {
-  "buildCommand": "npx vite build",
-  "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  "buildCommand": "cd design-fortune && npm install && npm run build",
+  "outputDirectory": "design-fortune/out",
+  "installCommand": "echo 'skip root install'"
 }
