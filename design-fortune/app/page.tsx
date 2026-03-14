@@ -80,7 +80,7 @@ export default function Home() {
       <StarField />
 
       {/* ── Main Content ── */}
-      <div className="relative z-10 flex flex-col items-center gap-10 px-4 py-16 w-full max-w-lg mx-auto">
+      <div className="relative z-10 flex flex-col items-center gap-10 px-4 py-8 sm:py-16 w-full max-w-lg mx-auto">
 
         {/* Header */}
         <header className="text-center">
