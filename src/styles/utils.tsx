@@ -100,25 +100,50 @@ export function ErrorHandler({ id, message }: ErrorHandlerProps) {
 
 // ── 반응형 브레이크포인트 훅 ──────────────────────────────────────────────────
 /**
- * tokens.breakpoints.md 기준으로 현재 뷰포트가 모바일인지 판별.
- * SSR 환경에서는 기본값 false(데스크탑) 반환 후 클라이언트에서 동기화.
+ * tokens.breakpoints(sm/md/lg) 3단계 기준으로 현재 뷰포트 상태를 판별.
+ * SSR 환경에서는 기본값(xs) 반환 후 클라이언트에서 동기화.
+ *
+ * 브레이크포인트 범위:
+ *   xs (mobile)  : < 480px
+ *   sm (mobile+) : 480–767px
+ *   md (tablet)  : 768–1199px
+ *   lg (desktop) : ≥ 1200px
  *
  * @example
- * const { isMobile } = useBreakpoint()
- * padding: isMobile ? tokens.spacing.xs : tokens.spacing.sm
+ * const { isMobile, isTablet, isDesktop } = useBreakpoint()
+ * width: isMobile ? '100%' : isTablet ? '50%' : '33%'
  */
 export function useBreakpoint() {
-  const query = `(max-width: ${tokens.breakpoints.md - 1}px)`
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
-  )
+  const getMatches = () =>
+    typeof window === 'undefined'
+      ? { sm: false, md: false, lg: false }
+      : {
+          sm: window.matchMedia(`(min-width: ${tokens.breakpoints.sm}px)`).matches,
+          md: window.matchMedia(`(min-width: ${tokens.breakpoints.md}px)`).matches,
+          lg: window.matchMedia(`(min-width: ${tokens.breakpoints.lg}px)`).matches,
+        }
+
+  const [matches, setMatches] = useState(getMatches)
 
   useEffect(() => {
-    const mq = window.matchMedia(query)
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [query])
+    const queries = [
+      { key: 'sm' as const, mq: window.matchMedia(`(min-width: ${tokens.breakpoints.sm}px)`) },
+      { key: 'md' as const, mq: window.matchMedia(`(min-width: ${tokens.breakpoints.md}px)`) },
+      { key: 'lg' as const, mq: window.matchMedia(`(min-width: ${tokens.breakpoints.lg}px)`) },
+    ]
+    const cleanups = queries.map(({ key, mq }) => {
+      const handler = (e: MediaQueryListEvent) =>
+        setMatches(prev => ({ ...prev, [key]: e.matches }))
+      mq.addEventListener('change', handler)
+      return () => mq.removeEventListener('change', handler)
+    })
+    return () => cleanups.forEach(fn => fn())
+  }, [])
 
-  return { isMobile }
+  return {
+    isMobile:   !matches.md,                   // < 768px  (하위 호환 유지)
+    isTablet:    matches.md && !matches.lg,    // 768–1199px
+    isDesktop:   matches.lg,                   // ≥ 1200px
+    breakpoint:  matches.lg ? 'lg' : matches.md ? 'md' : matches.sm ? 'sm' : 'xs',
+  } as const
 }

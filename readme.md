@@ -131,6 +131,77 @@ components/ ──► Atomic Design 컴포넌트 출력
 
 ---
 
+## 🗺️ Phased Engineering 전략 (단계적 설계)
+
+이 프로젝트는 "처음부터 완성된 시스템"이 아니라 **검증 가능한 단계를 밟아가는 엔지니어링 전략**으로 설계되었습니다.
+
+### Phase 1 — 순수 TypeScript 토큰 기반 시스템 (현재 완성)
+
+> **목표:** 프레임워크에 의존하지 않는 디자인 원칙의 단일 소스 확립
+
+```
+tokens.ts  ──── 단일 소스 원칙 (6종 토큰 카테고리)
+    │
+    ├── src/components/   ── 순수 TS + React 18 Atomic 컴포넌트 (3종)
+    │      Button.tsx / Input.tsx / Badge.tsx
+    │      └── useBreakpoint() — 3-tier 반응형 (xs/sm/md/lg)
+    │
+    ├── src/styles/utils.tsx ── 공통 스타일 유틸 (5함수 + 1훅)
+    │
+    ├── scripts/verify.sh ── 17항목 로컬 검증
+    │
+    └── .github/workflows/ ── 6-stage CI/CD 자동 파이프라인
+```
+
+**Phase 1 완성 기준:**
+- [x] 하드코딩 hex 0건 (CI 자동 차단)
+- [x] ARIA 100% 커버리지 (3/3 컴포넌트)
+- [x] 6종 토큰 카테고리 (colors/spacing/typography/borderRadius/breakpoints/states)
+- [x] 반응형 3단계 브레이크포인트 (xs/sm/md/lg)
+- [x] TypeScript strict 타입 안전성
+
+### Phase 2 — React 생태계 통합 (로드맵)
+
+> **목표:** Storybook을 통한 컴포넌트 문서화 자동화 및 시각적 회귀 테스트
+
+```
+현재 (Phase 1)              Phase 2 목표
+─────────────────           ──────────────────────────────────
+React + inline styles  →    Storybook 7 + CSF3 스토리 자동 생성
+수동 Showcase 페이지   →    Storybook ArgTable 자동 Props 문서화
+스크린샷 없음          →    Chromatic 시각적 회귀 테스트 (PR마다)
+수동 접근성 감사       →    @storybook/addon-a11y 자동 axe 통합
+```
+
+**Phase 2 마일스톤:**
+
+| 작업 | 우선순위 | 예상 공수 |
+|------|---------|---------|
+| `@storybook/react-vite` 설치 + Vite 통합 | P0 | 1일 |
+| Button/Input/Badge Stories 작성 (CSF3) | P0 | 0.5일 |
+| `@storybook/addon-a11y` axe 자동화 | P1 | 0.5일 |
+| Chromatic 시각적 회귀 테스트 연동 | P1 | 1일 |
+| Storybook → GitHub Pages 자동 배포 | P2 | 0.5일 |
+
+### Phase 3 — Figma Variables 자동 동기화 (장기 로드맵)
+
+> **목표:** Figma에서 토큰 변경 → `tokens.ts` 자동 생성 → PR 자동 생성
+
+```
+Figma Variables API
+        │
+        ▼
+figma-token-sync.ts  ──── tokens.ts 자동 생성 스크립트
+        │
+        ▼
+GitHub Actions (scheduled)  ──── 변경 감지 시 PR 자동 생성
+        │
+        ▼
+디자이너 PR 리뷰 → 머지 → 컴포넌트 자동 반영
+```
+
+---
+
 ## ✅ How to Run & Verify
 
 프로젝트가 올바르게 구성되어 있는지 한 번에 검증하는 방법입니다.

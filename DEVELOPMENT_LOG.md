@@ -458,11 +458,73 @@ push/PR to main
 | 하드코딩 hex 색상 | 0건 | ✅ 0건 (CI 자동 차단) |
 | 컴포넌트 ARIA 100% | 3/3 | ✅ Button·Input·Badge |
 | 토큰 카테고리 | colors·spacing·typography·borderRadius·breakpoints·states | ✅ 6종 |
-| 자동 검증 | scripts/verify.sh 17/17 | ✅ + GitHub Actions 3-Job |
-| 공통 유틸 | 중복 제거 | ✅ utils.tsx (5 함수) |
+| 자동 검증 | scripts/verify.sh 17/17 | ✅ + GitHub Actions 6-Stage |
+| 공통 유틸 | 중복 제거 | ✅ utils.tsx (5함수 + useBreakpoint) |
 | 브라우저 실행 | Vite Showcase | ✅ `bun run showcase` |
-| CI 파이프라인 | GitHub Actions | ✅ push/PR 자동 실행 |
-| 핵심 문서 | 5종 | ✅ 6종 (DEVELOPMENT_LOG 포함) |
+| CI 파이프라인 | GitHub Actions | ✅ main.yml 6-stage + verify.yml 3-job |
+| 반응형 시스템 | xs/sm/md/lg 4단계 | ✅ useBreakpoint() 3-tier 구현 |
+| 핵심 문서 | 5종 | ✅ 7종 (DRAGME/DESIGN_SYSTEM/TESTING/DEV_LOG/README/CLAUDE/phased) |
+
+---
+
+## 🗺️ Phased Engineering 전략
+
+### 이 전략이 존재하는 이유
+
+"처음부터 Storybook과 Figma API를 연동하지 않은 것"은 기술 부채가 아니라 **단계적 설계의 의도적 선택**이다. 소프트웨어 시스템에서 가장 위험한 결정은 아직 검증되지 않은 가정 위에 복잡한 구조를 쌓는 것이다.
+
+이 프로젝트는 가장 중요한 가정부터 검증했다: **"토큰 단일 소스 원칙이 실제 팀 워크플로우에서 작동하는가?"** Phase 1에서 이 가정을 검증했다. Phase 2 이후는 검증된 토대 위에 확장한다.
+
+### Phase 1 — 토큰 기반 원칙 검증 (2026-03-10 ~ 현재)
+
+**핵심 질문:** "AI 에이전트가 토큰 원칙을 자동으로 따르게 할 수 있는가?"
+
+| 구성 요소 | 역할 | 상태 |
+|----------|------|------|
+| `tokens.ts` | 단일 소스 (6종 카테고리) | ✅ 완성 |
+| `DRAGME.md` | AI 컨텍스트 강제 주입 | ✅ 완성 |
+| `utils.tsx` | 반복 로직 추상화 (5함수+1훅) | ✅ 완성 |
+| `verify.sh` | 로컬 17항목 자동 검증 | ✅ 완성 |
+| `main.yml` | 6-stage CI/CD 파이프라인 | ✅ 완성 |
+| `useBreakpoint()` | xs/sm/md/lg 3-tier 반응형 | ✅ 완성 |
+
+**검증 결과:** AI 에이전트 코드 생성 시 하드코딩 0건 달성. 원칙 강제 메커니즘 유효.
+
+### Phase 2 — React 생태계 통합 로드맵 (단기)
+
+**핵심 질문:** "컴포넌트 문서화와 시각적 회귀 테스트를 자동화할 수 있는가?"
+
+```
+Storybook 7 + CSF3
+  ├── Button.stories.tsx  — 모든 variant·state 시각화
+  ├── Input.stories.tsx   — error/focus/disabled 시나리오
+  ├── Badge.stories.tsx   — 4가지 semantic color 전시
+  └── @addon-a11y         — axe DevTools CI 자동 통합
+         │
+         ▼
+  Chromatic
+  └── PR마다 스크린샷 비교 → 시각적 회귀 자동 감지
+```
+
+**예상 공수:** 3일 (Storybook 설치 1일 + 스토리 작성 1일 + CI 통합 1일)
+
+### Phase 3 — Figma Variables 자동 동기화 (장기)
+
+**핵심 질문:** "디자이너가 Figma에서 값을 바꾸면 코드에 자동으로 반영되는가?"
+
+```
+Figma Variables API (2023 GA) ──► figma-token-sync.ts
+                                         │
+                              tokens.ts 자동 재생성
+                                         │
+                              GitHub Actions (cron/webhook)
+                                         │
+                              변경 감지 시 PR 자동 생성
+                                         │
+                              디자이너 리뷰 → 머지 → 전체 UI 반영
+```
+
+**이 구현이 Phase 3인 이유:** Figma API 연동은 Figma 플러그인 인증 토큰 관리, webhooks 설정, API 변경 대응 유지보수가 필요하다. Phase 1에서 원칙이 검증된 후에야 이 복잡성이 정당화된다.
 
 ---
 

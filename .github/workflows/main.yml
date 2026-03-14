@@ -1,0 +1,198 @@
+name: CI/CD — Full Pipeline
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 트리거: main 브랜치 push 및 PR
+# 목적: 토큰 무결성 → 타입 안전성 → 빌드 → 아티팩트 생성의 완전한 파이프라인
+# ──────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  BUN_VERSION: latest
+  NODE_VERSION: '20'
+
+jobs:
+  # ── Stage 1: 코드 품질 게이트 (병렬) ──────────────────────────────────────
+  lint-and-tokens:
+    name: "① Token Integrity & Hardcoding Check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache Bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run token & hardcoding verification (17 checks)
+        run: |
+          chmod +x scripts/verify.sh
+          bash scripts/verify.sh
+
+  type-safety:
+    name: "② TypeScript Type Safety"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache Bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: TypeScript strict type check
+        run: bunx tsc --noEmit
+
+  accessibility-check:
+    name: "③ Static Accessibility Lint"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check ARIA attributes in components
+        run: |
+          echo "▶ Checking ARIA attribute coverage..."
+          missing=0
+
+          # Button: aria-label, aria-disabled 필수
+          if ! grep -q "aria-label" src/components/Button.tsx; then
+            echo "❌ Button.tsx: aria-label 누락"
+            missing=$((missing + 1))
+          fi
+          if ! grep -q "aria-disabled" src/components/Button.tsx; then
+            echo "❌ Button.tsx: aria-disabled 누락"
+            missing=$((missing + 1))
+          fi
+
+          # Input: aria-invalid, aria-describedby 필수
+          if ! grep -q "aria-invalid" src/components/Input.tsx; then
+            echo "❌ Input.tsx: aria-invalid 누락"
+            missing=$((missing + 1))
+          fi
+          if ! grep -q "aria-describedby" src/components/Input.tsx; then
+            echo "❌ Input.tsx: aria-describedby 누락"
+            missing=$((missing + 1))
+          fi
+
+          # Badge: role="status" 필수
+          if ! grep -q 'role="status"' src/components/Badge.tsx; then
+            echo "❌ Badge.tsx: role=status 누락"
+            missing=$((missing + 1))
+          fi
+
+          if [ $missing -eq 0 ]; then
+            echo "✅ ARIA 속성 전체 통과 — $missing건 누락"
+          else
+            echo "❌ ARIA 속성 $missing건 누락"
+            exit 1
+          fi
+
+  # ── Stage 2: 빌드 검증 (Stage 1 전부 통과 후) ────────────────────────────
+  build-showcase:
+    name: "④ Vite Showcase Build"
+    runs-on: ubuntu-latest
+    needs: [lint-and-tokens, type-safety, accessibility-check]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache Bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Vite Showcase
+        run: bun run vite build
+
+      - name: Upload showcase artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: showcase-dist
+          path: dist/
+          retention-days: 7
+
+  build-fortune:
+    name: "⑤ Next.js Fortune App Build"
+    runs-on: ubuntu-latest
+    needs: [lint-and-tokens, type-safety, accessibility-check]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: design-fortune/package-lock.json
+
+      - name: Install dependencies
+        run: cd design-fortune && npm install
+
+      - name: Build Next.js static export
+        run: cd design-fortune && npm run build
+
+      - name: Upload fortune artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fortune-out
+          path: design-fortune/out/
+          retention-days: 7
+
+  # ── Stage 3: 파이프라인 결과 요약 ─────────────────────────────────────────
+  pipeline-summary:
+    name: "⑥ Pipeline Summary"
+    runs-on: ubuntu-latest
+    needs: [build-showcase, build-fortune]
+    if: always()
+    steps:
+      - name: Report pipeline result
+        run: |
+          echo "================================================"
+          echo " Design Fortune CI/CD Pipeline — Summary"
+          echo "================================================"
+          echo ""
+          echo " ① Token Integrity   : ${{ needs.lint-and-tokens.result }}"
+          echo " ② Type Safety       : ${{ needs.type-safety.result }}"
+          echo " ③ Accessibility     : ${{ needs.accessibility-check.result }}"
+          echo " ④ Showcase Build    : ${{ needs.build-showcase.result }}"
+          echo " ⑤ Fortune Build     : ${{ needs.build-fortune.result }}"
+          echo ""
+          if [[ "${{ needs.build-showcase.result }}" == "success" && \
+                "${{ needs.build-fortune.result }}" == "success" ]]; then
+            echo " ✅ All stages passed — artifacts ready for deploy"
+          else
+            echo " ❌ Pipeline failed — check individual job logs"
+            exit 1
+          fi
