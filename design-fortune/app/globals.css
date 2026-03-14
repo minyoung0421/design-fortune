@@ -102,3 +102,23 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.4); border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.7); }
+
+/* ── prefers-reduced-motion (WCAG 2.3.3 / PRD 비기능 요구사항) ── */
+@media (prefers-reduced-motion: reduce) {
+  /* Tailwind 커스텀 애니메이션 전체 중단 */
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-twinkle,
+  .animate-twinkle-alt,
+  .animate-spin-slow,
+  .animate-drift {
+    animation: none !important;
+  }
+
+  /* Framer Motion 트랜지션 단축 — JS 레이어는 framer가 자체 처리 */
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
