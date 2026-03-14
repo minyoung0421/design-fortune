@@ -97,6 +97,35 @@ app/globals.css            # CSS 변수 + 커스텀 유틸리티 클래스
 | Tailwind CSS | 3.4 | 스타일링 |
 | Framer Motion | 11.x | 애니메이션 |
 
+### 기술 선택 근거
+
+**왜 Next.js 14 App Router인가?**
+
+| 고려 사항 | Next.js App Router | 대안 (Vite/CRA) |
+|-----------|-------------------|-----------------|
+| 서버/클라이언트 분리 | `'use client'` 지시어로 명확한 경계 | 모든 컴포넌트가 클라이언트 |
+| 정적 배포 | `output: 'export'` 한 줄로 서버리스 배포 | 별도 설정 필요 |
+| 폰트 최적화 | `next/font`로 CLS 0 달성 | 수동 설정 필요 |
+| 메타데이터 | `metadata` export로 SEO 자동화 | `<head>` 수동 관리 |
+
+결론: 서버 없이 Vercel에 정적 배포하면서도 App Router의 서버 컴포넌트 구조(레이아웃/페이지 분리)를 활용하는 것이 이 앱의 규모에 최적이었다.
+
+**왜 Framer Motion인가?**
+
+3D 카드 플립의 핵심 요구사항은 두 가지였다:
+1. `rotateY(180deg)` 완료 후 정확한 시점에 뒷면 콘텐츠를 마운트해야 함 (타이밍 제어)
+2. 브라우저별 `backface-visibility` 렌더링 차이를 추상화해야 함
+
+CSS `@keyframes`로는 `onAnimationComplete` 콜백이 없어서 플립 완료 시점을 `setTimeout`으로 추정해야 한다. Framer Motion은 이 콜백을 네이티브로 제공하므로 뒷면 콘텐츠가 절대 깜빡이지 않는다.
+
+```typescript
+// Framer Motion: 플립 완료 후 showBack=true → BackContent 마운트
+<motion.div
+  animate={{ rotateY: isFlipped ? 180 : 0 }}
+  onAnimationComplete={() => setShowBack(isFlipped)}
+/>
+```
+
 ---
 
 ## 핵심 기능
@@ -136,7 +165,8 @@ design-fortune/
 │   ├── layout.tsx           # 루트 레이아웃
 │   └── page.tsx             # 메인 페이지
 ├── components/
-│   └── FortuneCard.tsx      # 핵심 인터랙티브 카드
+│   ├── FortuneCard.tsx      # 핵심 인터랙티브 카드 (3D 플립 + 수정구슬)
+│   └── BackContent.tsx      # 운세 결과 뒷면 컴포넌트 (SRP 분리)
 ├── lib/
 │   └── fortune-data.ts      # 운세 데이터 & 생성 로직
 ├── styles/
