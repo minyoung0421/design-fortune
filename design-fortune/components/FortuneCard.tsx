@@ -446,7 +446,9 @@ export default function FortuneCard() {
             <div
               className="glass-card rounded-2xl w-full h-full flex flex-col items-center justify-center gap-8 cursor-pointer select-none relative overflow-hidden"
               onClick={handleFlip}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleFlip() } }}
               role="button"
+              tabIndex={0}
               aria-label="클릭하여 오늘의 디자인 운세 보기"
             >
               <Sparkles />

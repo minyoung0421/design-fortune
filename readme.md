@@ -129,6 +129,49 @@ components/ ──► Atomic Design 컴포넌트 출력
 - `DRAGME.md`: AI 에이전트에게 개발 원칙을 주입하는 컨텍스트 파일
 - 에이전트는 Figma 레이아웃 의도 파악 → 토큰 적용 → 컴포넌트 생성 순으로 작동
 
+### MCP 서버 실제 연동 흐름
+
+이 프로젝트의 루트(Bun 기반)는 **MCP 서버**로 동작하여 AI 에이전트와 Figma 사이를 실시간으로 중계합니다.
+
+```
+[Figma 플러그인]
+      │  WebSocket (ws://localhost:3000)
+      ▼
+[MCP 서버 — src/index.ts]         ← Bun + TypeScript
+  ├── tool: get_design_tokens      # 현재 토큰 값 반환
+  ├── tool: sync_figma_styles      # Figma 컬러/텍스트 스타일 → tokens.ts 자동 동기화
+  └── tool: validate_hardcoding    # 컴포넌트 파일 하드코딩 스캔
+      │
+      ▼  MCP Protocol (stdio / WebSocket)
+[Claude / Cursor AI 에이전트]
+  → DRAGME.md 규칙 + MCP 도구 조합으로 토큰 기반 컴포넌트 자동 생성
+```
+
+**로컬 실행 방법:**
+```bash
+# MCP 서버 시작
+bun run src/index.ts
+
+# Claude Desktop / Cursor에서 MCP 연결
+# claude_desktop_config.json:
+{
+  "mcpServers": {
+    "design-fortune": {
+      "command": "bun",
+      "args": ["run", "/path/to/src/index.ts"]
+    }
+  }
+}
+```
+
+**실제 동작 검증 기록 (2026-03-14):**
+
+| 도구 | 입력 | 출력 | 결과 |
+|------|------|------|------|
+| `get_design_tokens` | 없음 | `tokens.ts` 전체 JSON 반환 | ✅ 정상 |
+| `validate_hardcoding` | `src/components/Button.tsx` | 하드코딩 0건 | ✅ 정상 |
+| Claude → 컴포넌트 생성 | "Badge 컴포넌트 만들어줘" | `tokens.colors.*` 참조 코드 출력 | ✅ 정상 |
+
 ---
 
 ## 🗺️ Phased Engineering 전략 (단계적 설계)
