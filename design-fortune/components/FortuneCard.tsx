@@ -431,7 +431,7 @@ export default function FortuneCard() {
       </AnimatePresence>
 
       <div
-        className="relative w-full max-w-[360px] h-[590px]"
+        className="relative w-full max-w-[90vw] md:max-w-[360px] h-[590px]"
         style={{ perspective: '1400px' }}
       >
         <motion.div

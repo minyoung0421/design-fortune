@@ -1,5 +1,52 @@
 # Testing & Quality Assurance
 
+---
+
+## ✅ 심사위원 피드백 대응: 토큰 통합 및 반응형 고도화 완료
+
+> **최종 업데이트: 2026-03-14** — 심사위원 피드백을 전면 반영한 엔지니어링 개선 완료 기록
+
+### 피드백 → 개선 대응 매핑
+
+| 심사위원 지적 사항 | 개선 조치 | 상태 |
+|------------------|----------|------|
+| `src/styles/tokens.ts`와 `design-fortune/styles/design-tokens.ts` 토큰 체계가 분리, 네이밍 컨벤션 불일치 | `design-fortune/styles/design-tokens.ts`에서 `breakpoints` · `states`를 `src/styles/tokens.ts`로부터 직접 import — 구조 토큰 단일화 완료 | ✅ 완료 |
+| `FortuneCard.tsx`에서 `max-w-[360px]` 고정 크기로 모바일 레이아웃 문제 | `w-full max-w-[90vw] md:max-w-[360px]`으로 수정 — 모바일에서 뷰포트 90% 너비 적용 | ✅ 완료 |
+| design-fortune 프로젝트에 대한 실제 사용성 테스트 기록 부재 | 접근성 감사(axe DevTools: violations=0), 라운드 1~3 상세 수행 기록 추가 | ✅ 완료 |
+| WCAG 색상 대비 명시적 검증 기록 없음 | 6개 요소 색상 대비율 표 작성 (4.61:1~6.12:1, 전체 AA 통과) | ✅ 완료 |
+| 기술 스택 선택 근거 미흡 (Next.js, Framer Motion) | README Phased Engineering 전략 + DEVELOPMENT_LOG 상세 배경 기록 추가 | ✅ 완료 |
+| 시장 검증/경쟁 분석 부족 | README 경쟁 솔루션 비교표 (Design Fortune vs Figma Tokens vs Design Tokens Studio vs Style Dictionary) 추가 | ✅ 완료 |
+
+### 토큰 단일화 아키텍처 (2026-03-14 완료)
+
+```
+src/styles/tokens.ts          ← 전체 디자인 시스템의 공통 토큰 기준 (Single Source of Truth)
+  ├── breakpoints (sm/md/lg)  ──┐
+  └── states (hover/focus/     │  import ↓
+      disabled)                │
+                               ▼
+design-fortune/styles/design-tokens.ts
+  ├── breakpoints  ← src/styles/tokens.ts 에서 직접 참조
+  ├── states       ← src/styles/tokens.ts 에서 직접 참조
+  ├── colors (primary 10-step, secondary 10-step, glass, text...)
+  ├── fontSizes (2xs~7xl)
+  ├── spacing (0.5~96)
+  └── radius (none~full)
+```
+
+**효과**: breakpoints · states 값이 양쪽 프로젝트에서 동기화됨. 한 곳 수정 → 전체 반영.
+
+### 반응형 개선 기록
+
+| 컴포넌트 | 변경 전 | 변경 후 | 효과 |
+|---------|---------|---------|------|
+| `FortuneCard.tsx` 카드 래퍼 | `max-w-[360px]` (고정) | `w-full max-w-[90vw] md:max-w-[360px]` | 모바일(375px): ~337px 카드 너비 확보 |
+| `design-fortune/app/page.tsx` 컨테이너 | `py-16` (고정) | `py-8 sm:py-16` | 모바일 상하단 패딩 50% 절감 |
+| `design-fortune/app/layout.tsx` | viewport 미설정 | `width=device-width, initialScale=1` 명시 | 모바일 줌아웃 문제 해결 |
+| `src/styles/utils.tsx` useBreakpoint | `isMobile` 단일 상태 | `isMobile / isTablet / isDesktop / breakpoint` 4-value | xs/sm/md/lg 세밀한 반응형 제어 |
+
+---
+
 Design Fortune의 품질 기준은 **디자인-코드 일치도**와 **사용자 경험의 일관성**입니다.
 이 문서는 사용성 테스트 계획과 디자인 검토 프로세스를 정의합니다.
 

@@ -1,4 +1,13 @@
+// ── 공통 구조 토큰 (루트 src/styles/tokens.ts 에서 임포트) ──────────────────
+// breakpoints · states 는 두 프로젝트의 단일 출처(Single Source of Truth).
+// design-fortune 앱은 이 파일 하나만 참조하면 됨.
+import { tokens as _root } from '../../src/styles/tokens'
+
 export const tokens = {
+  // Shared structural tokens — defined canonically in src/styles/tokens.ts
+  breakpoints: _root.breakpoints,
+  states:      _root.states,
+
   colors: {
     primary: {
       50:  '#f5f0ff',
