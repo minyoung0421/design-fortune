@@ -13,7 +13,7 @@
 
 import { useState } from 'react'
 import { tokens } from '../styles/tokens'
-import { getFocusOutline, getInteractiveOpacity, getDisabledCursor } from '../styles/utils'
+import { getFocusOutline, getInteractiveOpacity, getDisabledCursor, useBreakpoint } from '../styles/utils'
 
 type ButtonVariant = 'primary' | 'accent'
 
@@ -35,6 +35,7 @@ export const Button = ({
 }: ButtonProps) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
+  const { isMobile } = useBreakpoint()
 
   const backgroundColor = disabled
     ? tokens.colors.primary
@@ -56,7 +57,12 @@ export const Button = ({
         backgroundColor,
         color: tokens.colors.white,
         fontSize: tokens.typography.body,
-        padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+        // 반응형: 모바일(<768px)에서 전체 너비, 패딩 축소
+        padding: isMobile
+          ? `${tokens.spacing.xs} ${tokens.spacing.sm}`
+          : `${tokens.spacing.sm} ${tokens.spacing.md}`,
+        display: isMobile ? 'block' : 'inline-block',
+        width: isMobile ? '100%' : 'auto',
         borderRadius: tokens.borderRadius.md,
         border: 'none',
         cursor: getDisabledCursor(disabled, 'pointer'),

@@ -19,6 +19,7 @@
  */
 
 import { tokens } from '../styles/tokens'
+import { useBreakpoint } from '../styles/utils'
 
 type BadgeVariant = 'primary' | 'accent' | 'success' | 'error'
 
@@ -54,6 +55,7 @@ export const Badge = ({
   ariaLabel,
 }: BadgeProps) => {
   const { background, color } = VARIANT_STYLES[variant]
+  const { isMobile } = useBreakpoint()
 
   return (
     <span
@@ -66,7 +68,8 @@ export const Badge = ({
         fontWeight: 500,
         color,
         backgroundColor: background,
-        padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
+        // 반응형: 모바일(<768px)에서 패딩 축소
+        padding: isMobile ? `2px ${tokens.spacing.xs}` : `${tokens.spacing.xs} ${tokens.spacing.sm}`,
         borderRadius: tokens.borderRadius.sm,
         lineHeight: 1,
       }}

@@ -43,6 +43,7 @@ import {
   getDisabledCursor,
   getBorderColor,
   ErrorHandler,
+  useBreakpoint,
 } from '../styles/utils'
 
 interface InputProps {
@@ -68,6 +69,7 @@ export const Input = ({
   ariaDescribedBy,
 }: InputProps) => {
   const [isFocused, setIsFocused] = useState(false)
+  const { isMobile } = useBreakpoint()
 
   const inputId = `input-${label.replace(/\s+/g, '-').toLowerCase()}`
   const errorId = `${inputId}-error`
@@ -100,7 +102,10 @@ export const Input = ({
         style={{
           fontSize: tokens.typography.body,
           color: tokens.colors.primary,
-          padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+          // 반응형: 모바일(<768px)에서 패딩 축소
+          padding: isMobile
+            ? `${tokens.spacing.xs} ${tokens.spacing.sm}`
+            : `${tokens.spacing.sm} ${tokens.spacing.md}`,
           borderRadius: tokens.borderRadius.md,
           border: `1.5px solid ${getBorderColor(error, isFocused)}`,
           opacity: getInteractiveOpacity(disabled),

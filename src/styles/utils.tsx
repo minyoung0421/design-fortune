@@ -12,7 +12,7 @@
  *   ErrorHandler        — 공통 에러 메시지 컴포넌트
  */
 
-import { CSSProperties } from 'react'
+import { useState, useEffect, CSSProperties } from 'react'
 import { tokens } from './tokens'
 
 // ── 포커스 outline ────────────────────────────────────────────────────────────
@@ -96,4 +96,29 @@ export function ErrorHandler({ id, message }: ErrorHandlerProps) {
       {message}
     </span>
   )
+}
+
+// ── 반응형 브레이크포인트 훅 ──────────────────────────────────────────────────
+/**
+ * tokens.breakpoints.md 기준으로 현재 뷰포트가 모바일인지 판별.
+ * SSR 환경에서는 기본값 false(데스크탑) 반환 후 클라이언트에서 동기화.
+ *
+ * @example
+ * const { isMobile } = useBreakpoint()
+ * padding: isMobile ? tokens.spacing.xs : tokens.spacing.sm
+ */
+export function useBreakpoint() {
+  const query = `(max-width: ${tokens.breakpoints.md - 1}px)`
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
+  )
+
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [query])
+
+  return { isMobile }
 }
