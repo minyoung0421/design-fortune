@@ -21,6 +21,14 @@ const config: Config = {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './lib/**/*.{js,ts,jsx,tsx,mdx}',
+    './styles/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  safelist: [
+    // 반응형 접두사 — 동적 렌더링 환경에서 퍼지 방지
+    { pattern: /^sm:/ },
+    { pattern: /^md:/ },
+    { pattern: /^lg:/ },
   ],
   theme: {
     extend: {

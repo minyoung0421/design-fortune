@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Cinzel_Decorative, Cormorant_Garamond, Inter } from 'next/font/google'
 import './globals.css'
 
@@ -22,6 +22,11 @@ const inter = Inter({
   variable: '--font-inter',
   display: 'swap',
 })
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export const metadata: Metadata = {
   title: 'Design Fortune — 오늘의 디자인 운세',
