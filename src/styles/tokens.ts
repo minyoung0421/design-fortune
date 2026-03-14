@@ -27,4 +27,19 @@ export const tokens = {
     md: 768,
     lg: 1200,
   },
+  states: {
+    hover: {
+      opacity: 0.82,
+    },
+    focus: {
+      outlineWidth: '2px',
+      outlineStyle: 'solid' as const,
+      outlineColor: '#3182CE', // accent
+      outlineOffset: '2px',
+    },
+    disabled: {
+      opacity: 0.45,
+      cursor: 'not-allowed' as const,
+    },
+  },
 };
