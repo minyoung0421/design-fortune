@@ -40,7 +40,7 @@ export const Button = ({
       aria-disabled={disabled}
       style={{
         backgroundColor,
-        color: '#ffffff',
+        color: tokens.colors.white,
         fontSize: tokens.typography.body,
         padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
         borderRadius: tokens.borderRadius.md,

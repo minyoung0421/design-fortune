@@ -92,7 +92,7 @@ export const Input = ({
           outline: 'none',
           opacity: disabled ? 0.5 : 1,
           cursor: disabled ? 'not-allowed' : 'text',
-          backgroundColor: disabled ? '#f7f7f7' : '#ffffff',
+          backgroundColor: disabled ? tokens.colors.surface : tokens.colors.white,
           width: '100%',
           boxSizing: 'border-box',
         }}

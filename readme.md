@@ -83,6 +83,60 @@ components/ ──► Atomic Design 컴포넌트 출력
 
 ---
 
+## ✅ How to Run & Verify
+
+프로젝트가 올바르게 구성되어 있는지 한 번에 검증하는 방법입니다.
+
+### Step 1. 저장소 클론 및 의존성 설치
+
+```bash
+git clone https://github.com/minyoung0421/design-fortune.git
+cd design-fortune
+bun install
+```
+
+### Step 2. 검증 스크립트 실행
+
+```bash
+bash scripts/verify.sh
+```
+
+스크립트는 **5개 영역 17개 항목**을 자동으로 체크합니다.
+
+| 검증 영역 | 체크 항목 |
+|-----------|-----------|
+| **Core Files** | `tokens.ts`, `DRAGME.md`, `DESIGN_SYSTEM.md`, `TESTING.md`, `DEVELOPMENT_LOG.md`, `readme.md` 존재 여부 |
+| **Components** | `Button.tsx`, `Input.tsx`, `Badge.tsx` 존재 여부 |
+| **Token Integrity** | `colors`, `spacing`, `typography`, `borderRadius` 4개 카테고리 정의 여부 |
+| **Hardcoding Detection** | 컴포넌트 내 하드코딩 hex 색상 0건 여부 |
+| **Runtime** | `bun`, `git`, `package.json` 준비 상태 |
+
+### Step 3. 결과 확인
+
+모든 항목이 통과하면 아래 메시지가 출력됩니다:
+
+```
+================================================
+ Results: 17/17 checks passed
+================================================
+
+  ✅ System Ready
+```
+
+항목이 실패하면 `❌ FAIL` 표시와 함께 실패 항목이 명시되고, exit code 1로 종료됩니다.
+
+### Step 4. MCP 서버 시작 (Figma 연동 시)
+
+```bash
+# WebSocket 서버 실행 (Figma 플러그인 연결용)
+bun socket
+
+# 별도 터미널에서 로그 모니터링
+tail -f websocket.log
+```
+
+---
+
 ## 🗂️ 프로젝트 구조
 
 ```
