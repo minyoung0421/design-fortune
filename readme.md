@@ -149,8 +149,181 @@ const Button = () => <button style={{ backgroundColor: '#3182CE' }}>확인</butt
 
 ---
 
+## 🖥️ User Experience & UI Flow
+
+### Figma → Code 3단계 변환 흐름
+
+디자이너가 Figma에서 컴포넌트를 선택하는 순간부터 토큰 기반 코드가 생성되기까지의 전체 흐름입니다.
+
+```mermaid
+flowchart TD
+    A["🎨 디자이너\nFigma에서 컴포넌트 선택"] --> B["🔌 Figma Plugin\n선택 정보 캡처\n(레이어명 / 색상 / 간격 / 폰트)"]
+    B --> C["🌐 WebSocket\nsocket.ts → ws://localhost:3055\n실시간 데이터 전송"]
+    C --> D["🤖 Cursor AI 에이전트\nMCP 컨텍스트 수신\n+ DRAGME.md 원칙 로드"]
+    D --> E{"tokens.ts에\n매핑 가능한가?"}
+    E -->|"✅ 매핑됨"| F["토큰 참조 코드 자동 생성\nexport const Button = ..."]
+    E -->|"⚠️ 매핑 불가"| G["토큰 확장 제안\nDESIGN_SYSTEM.md 업데이트 요청"]
+    F --> H["📋 컴포넌트 코드 출력\n하드코딩 0건 보장"]
+    G --> D
+
+    style A fill:#3182CE,color:#fff,stroke:none
+    style D fill:#718096,color:#fff,stroke:none
+    style F fill:#48BB78,color:#fff,stroke:none
+    style H fill:#48BB78,color:#fff,stroke:none
+    style G fill:#F56565,color:#fff,stroke:none
+```
+
+**3단계 요약:**
+
+| 단계 | 주체 | 동작 |
+|------|------|------|
+| **Step 1. 선택** | 디자이너 | Figma에서 컴포넌트 클릭 → 플러그인이 레이어 정보 캡처 |
+| **Step 2. 전송** | WebSocket | `socket.ts`가 실시간으로 Cursor 에이전트에 컨텍스트 전달 |
+| **Step 3. 생성** | AI 에이전트 | `DRAGME.md` 원칙 + `tokens.ts` 기준으로 하드코딩 없는 컴포넌트 코드 출력 |
+
+---
+
+### 컴포넌트 Props & 디자인 토큰 적용 표
+
+#### Button
+
+| Prop | 타입 | 기본값 | 적용 토큰 | 설명 |
+|------|------|--------|-----------|------|
+| `label` | `string` | — | — | 버튼 텍스트 |
+| `variant` | `'primary' \| 'accent'` | `'accent'` | `tokens.colors.primary` / `tokens.colors.accent` | 버튼 색상 의미 |
+| `disabled` | `boolean` | `false` | `tokens.colors.primary` (비활성 시 자동 적용) | 비활성 상태 |
+| `onClick` | `() => void` | — | — | 클릭 핸들러 |
+| `ariaLabel` | `string` | `label` 값 | — | 스크린 리더용 레이블 |
+
+**토큰 적용 예시:**
+```typescript
+// variant="accent" → tokens.colors.accent (#3182CE)
+// padding → tokens.spacing.sm + tokens.spacing.md (8px 16px)
+// borderRadius → tokens.borderRadius.md (12px)
+// fontSize → tokens.typography.body (16px)
+<Button label="저장" variant="accent" />
+```
+
+---
+
+#### Input
+
+| Prop | 타입 | 기본값 | 적용 토큰 | 설명 |
+|------|------|--------|-----------|------|
+| `label` | `string` | — | `tokens.colors.primary` | 필드 레이블 텍스트 |
+| `type` | `'text' \| 'password' \| 'email' \| 'number'` | `'text'` | — | HTML input 타입 |
+| `error` | `string` | — | `tokens.colors.error` (테두리 + 메시지) | 에러 상태 메시지 |
+| `disabled` | `boolean` | `false` | opacity 0.5 적용 | 비활성 상태 |
+| `placeholder` | `string` | — | — | 입력 전 힌트 텍스트 |
+| `ariaDescribedBy` | `string` | — | — | 보조 설명 연결 (접근성) |
+
+**토큰 적용 예시:**
+```typescript
+// 정상 상태: border → tokens.colors.primary (#718096)
+// 에러 상태: border → tokens.colors.error (#F56565)
+// padding → tokens.spacing.sm + tokens.spacing.md
+// borderRadius → tokens.borderRadius.md (12px)
+<Input label="이메일" error="올바른 형식으로 입력해주세요" onChange={handleChange} />
+```
+
+---
+
+#### Badge
+
+| Prop | 타입 | 기본값 | 적용 토큰 | 설명 |
+|------|------|--------|-----------|------|
+| `label` | `string` | — | — | 배지 텍스트 |
+| `variant` | `'primary' \| 'accent' \| 'success' \| 'error'` | `'primary'` | 각 variant별 `tokens.colors.*` | 배지 의미 색상 |
+| `ariaLabel` | `string` | `label` 값 | — | 스크린 리더용 레이블 |
+
+**토큰 적용 예시:**
+```typescript
+// variant="success" → tokens.colors.success (#48BB78) 10% opacity 배경
+// fontSize → tokens.typography.body (16px)
+// padding → tokens.spacing.xs + tokens.spacing.sm (4px 8px)
+// borderRadius → tokens.borderRadius.sm (4px)
+<Badge label="완료" variant="success" />
+<Badge label="오류" variant="error" />
+```
+
+---
+
+### 반응형 대응 전략
+
+Design Fortune의 반응형 전략은 **토큰 기반 브레이크포인트**와 **컴포넌트 자율 적응** 두 원칙을 결합합니다.
+
+#### 브레이크포인트 기준
+
+```
+Mobile   → 768px 미만    : 단일 컬럼, 터치 최적화
+Tablet   → 768px ~ 1024px: 2컬럼 그리드, 하이브리드 입력
+Desktop  → 1024px 초과   : 다중 컬럼, 호버 인터랙션 활성
+```
+
+#### 모바일 전략 (`< 768px`)
+
+**레이아웃:**
+- 모든 컴포넌트를 단일 컬럼으로 스택 배치
+- `padding`: `tokens.spacing.md`(16px) → 좌우 여백 확보로 엄지 터치 오타 방지
+
+**Button:**
+- `width: 100%` 풀 너비 적용 — 모바일에서 터치 타깃 최대화
+- 최소 높이 44px 보장 (Apple HIG / Google Material 터치 타깃 기준)
+- `tokens.spacing.md`(16px) vertical padding으로 터치 영역 확보
+
+**Input:**
+- 레이블과 인풋을 수직으로 배치 (가로 레이아웃 사용 금지)
+- 에러 메시지는 인풋 바로 아래 `tokens.spacing.xs`(4px) 간격으로 표시
+- `font-size: 16px` 고정 → iOS Safari의 자동 줌 방지 (`tokens.typography.body` 그대로 사용)
+
+**Badge:**
+- `tokens.spacing.xs + tokens.spacing.sm`(4px 8px) 패딩 유지
+- 여러 배지가 나열될 경우 Flexbox `wrap`으로 자동 줄 바꿈
+
+#### 태블릿 전략 (`768px ~ 1024px`)
+
+**레이아웃:**
+- 2컬럼 그리드 적용 (`gap: tokens.spacing.md`)
+- 폼 요소는 레이블-인풋 수평 배치로 전환 가능
+
+**Button:**
+- `width: auto` 복귀 — 콘텐츠 너비에 맞춤
+- 기본 padding(`tokens.spacing.sm` + `tokens.spacing.md`) 유지
+- 호버 상태 시각 피드백 추가 (opacity 0.85)
+
+**Input:**
+- 레이블을 좌측 고정, 인풋을 우측 flex-grow로 배치하는 수평 레이아웃 허용
+- `width`는 컨테이너의 100%로 유지하되, 컨테이너 자체가 grid 셀에 맞춤
+
+**Badge:**
+- 인라인 배치 유지, 그룹 배지 간 간격 `tokens.spacing.xs`(4px)
+
+#### 데스크톱 전략 (`> 1024px`)
+
+**레이아웃:**
+- 3컬럼 이상 그리드, 사이드바 패턴 허용
+- 섹션 간 간격 `tokens.spacing.lg`(24px) 최대 활용
+
+**Button:**
+- 기본 크기 유지 + `cursor: pointer` 명시적 표시
+- `transition: opacity 0.15s` 호버 애니메이션 — 토큰 외 유일하게 허용되는 인라인 값(애니메이션 duration은 토큰 미정의 항목)
+- 포커스 시 `outline: 2px solid tokens.colors.accent` 키보드 접근성 표시
+
+**Input:**
+- 최대 너비 `480px` 제한 — 긴 인풋은 시선 이동 거리가 늘어나 UX 저하
+- 에러 메시지와 인풋을 나란히 배치하는 inline-error 패턴 사용 가능
+
+**공통 원칙 — 모든 브레이크포인트에서 변하지 않는 것:**
+- 모든 색상 → `tokens.colors.*` 고정 (반응형 여부와 무관)
+- 폰트 사이즈 → `tokens.typography.body`(16px) 고정 (해상도에 따른 가변 없음)
+- 보더 라디우스 → `tokens.borderRadius.*` 고정 (컴포넌트 크기와 무관)
+- ARIA 속성 → 브레이크포인트와 무관하게 항상 존재
+
+---
+
 ## 📄 관련 문서
 
 - [AI 에이전트 원칙 →](./DRAGME.md)
 - [디자인 시스템 전체 문서 →](./DESIGN_SYSTEM.md)
 - [테스트 및 품질 검증 →](./TESTING.md)
+- [개발 진행 기록 →](./DEVELOPMENT_LOG.md)
