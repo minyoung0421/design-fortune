@@ -21,5 +21,10 @@ export const tokens = {
     sm: '4px',
     md: '12px',
     lg: '24px',
-  }
+  },
+  breakpoints: {
+    sm: 480,
+    md: 768,
+    lg: 1200,
+  },
 };

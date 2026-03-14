@@ -375,6 +375,106 @@ Desktop  → 1024px 초과   : 다중 컬럼, 호버 인터랙션 활성
 
 ---
 
+## 🖥️ Design System Showcase (데모 페이지)
+
+모든 컴포넌트와 토큰을 브라우저에서 바로 확인할 수 있는 인터랙티브 쇼케이스 페이지입니다.
+
+### 실행 방법
+
+```bash
+bun run showcase
+# → http://localhost:5173/
+```
+
+### 쇼케이스 구성
+
+| 섹션 | 내용 |
+|------|------|
+| **Header** | 브랜드 + Badge 태그 (v1.0 / Token-First / Atomic Design) |
+| **왜 토큰 우선인가?** | 단일 진실 원천·하드코딩 제로·AI 친화적 설명 카드 |
+| **Color Tokens** | tokens.colors 전체 스와치 + 변수명·hex값 표시 |
+| **Spacing Tokens** | 8px 그리드 시각화 (xs→sm→md→lg 크기 비교) |
+| **Button** | primary / accent / disabled 3가지 상태 |
+| **Input** | 실시간 비밀번호 유효성 검증 데모 + disabled·error 상태 |
+| **Badge** | 4가지 variant 전체 |
+| **Token Architecture** | 의존성 구조도 (텍스트 다이어그램) |
+| **Footer** | 현재 화면 너비 + 브레이크포인트 이름 실시간 표시 |
+
+---
+
+### 실시간 브레이크포인트 반응형 로직
+
+쇼케이스는 CSS 미디어쿼리 대신 **`tokens.breakpoints`를 직접 참조하는 JS 로직**으로 반응형을 구현합니다. 토큰과 레이아웃이 단일 소스에서 동기화되는 구조입니다.
+
+```typescript
+// tokens.ts에 정의된 브레이크포인트
+breakpoints: { sm: 480, md: 768, lg: 1200 }
+
+// App.tsx — window.innerWidth를 구독하여 실시간 재계산
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth)
+  useEffect(() => {
+    const handle = () => setWidth(window.innerWidth)
+    window.addEventListener('resize', handle)
+    return () => window.removeEventListener('resize', handle)
+  }, [])
+  return width
+}
+
+// 브레이크포인트 판별 — 숫자 비교로 타입 안전 보장
+const isMobile  = width < tokens.breakpoints.md   // < 768px  → 1열
+const isDesktop = width >= tokens.breakpoints.lg  // ≥ 1200px → 3열
+const cols = isDesktop ? 3 : isMobile ? 1 : 2     // 그 외     → 2열
+
+// 레이아웃에 즉시 적용
+const pad = isMobile ? tokens.spacing.md : tokens.spacing.lg
+```
+
+**핵심:** 브레이크포인트 수치를 `tokens.breakpoints`에서 한 번만 정의하면, 레이아웃·패딩·컬럼 수 모두 자동으로 동기화됩니다.
+
+---
+
+### 토큰 의존성 구조도
+
+```
+tokens.ts  ← Single Source of Truth
+│
+├── colors.primary / accent / error / success / white / surface
+├── spacing.xs / sm / md / lg
+├── typography.heading / body
+├── borderRadius.sm / md / lg
+└── breakpoints.sm / md / lg
+      │
+      ├── Button.tsx
+      │     backgroundColor → tokens.colors.accent / primary
+      │     color           → tokens.colors.white
+      │     padding         → tokens.spacing.sm + md
+      │     borderRadius    → tokens.borderRadius.md
+      │     fontSize        → tokens.typography.body
+      │
+      ├── Input.tsx
+      │     border          → tokens.colors.primary | error (에러 상태)
+      │     backgroundColor → tokens.colors.white | surface (비활성)
+      │     gap             → tokens.spacing.xs
+      │     padding         → tokens.spacing.sm + md
+      │     borderRadius    → tokens.borderRadius.md
+      │
+      ├── Badge.tsx
+      │     background      → tokens.colors.* + '1a' (10% opacity)
+      │     color           → tokens.colors.*
+      │     padding         → tokens.spacing.xs + sm
+      │     borderRadius    → tokens.borderRadius.sm
+      │
+      └── App.tsx (Showcase)
+            columns         → tokens.breakpoints.md / lg
+            padding         → tokens.spacing.md | lg
+            gap             → tokens.spacing.md | lg
+```
+
+> **검증:** `bash scripts/verify.sh` 실행 시 컴포넌트 내 하드코딩 hex 색상 0건을 자동으로 확인합니다.
+
+---
+
 ## 📄 관련 문서
 
 - [AI 에이전트 원칙 →](./DRAGME.md)

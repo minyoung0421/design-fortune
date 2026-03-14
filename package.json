@@ -13,6 +13,7 @@
   ],
   "type": "module",
   "scripts": {
+    "showcase": "vite",
     "start": "bun run dist/server.js",
     "socket": "bun run src/socket.ts",
     "setup": "./scripts/setup.sh",
@@ -23,12 +24,18 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
     "bun-types": "^1.2.5",
     "tsup": "^8.4.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vite": "^8.0.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.13.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "uuid": "latest",
     "ws": "latest",
     "zod": "3.22.4"
