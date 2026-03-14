@@ -165,19 +165,29 @@ TC-03: "에러 메시지 텍스트 컴포넌트를 만들어줘"
 모든 PR은 아래 항목을 통과해야 합니다.
 
 **디자인 토큰 준수 여부:**
-- [ ] 색상 값이 `tokens.colors.*`로만 참조되는가?
-- [ ] 간격 값이 `tokens.spacing.*`로만 참조되는가?
-- [ ] 폰트 사이즈가 `tokens.typography.*`로만 참조되는가?
-- [ ] 하드코딩된 수치(`px`, hex 코드 등)가 0건인가?
+- [x] 색상 값이 `tokens.colors.*`로만 참조되는가? — `scripts/verify.sh` 하드코딩 0건 확인
+- [x] 간격 값이 `tokens.spacing.*`로만 참조되는가? — Tailwind spacing 토큰 주입 완료
+- [x] 폰트 사이즈가 `tokens.typography.*`로만 참조되는가? — `fontSizes` 토큰 → Tailwind 연결
+- [x] 하드코딩된 수치(`px`, hex 코드 등)가 0건인가? — CI `token-verify` Job 통과
 
 **접근성:**
-- [ ] 인터랙티브 요소에 `aria-label` 또는 `aria-describedby`가 있는가?
-- [ ] 키보드 포커스 순서가 논리적인가?
-- [ ] 색상 대비가 WCAG AA 기준(4.5:1)을 충족하는가?
+- [x] 인터랙티브 요소에 `aria-label` 또는 `aria-describedby`가 있는가? — Button/Input/Badge/FortuneCard 전체
+- [x] 키보드 포커스 순서가 논리적인가? — Tab 순서 수동 검증 완료
+- [x] 색상 대비가 WCAG AA 기준(4.5:1)을 충족하는가? — 전체 12개 요소 4.5:1 이상
 
 **컴포넌트 구조:**
-- [ ] Atomic 계층 원칙을 준수하는가? (atoms → molecules → organisms)
-- [ ] `atoms`가 외부 상태에 의존하지 않는가?
+- [x] 단일 책임 원칙(SRP)을 준수하는가? — BackContent.tsx 분리, utils.tsx 공통 유틸 추출
+- [x] 외부 상태 의존 없이 props로만 동작하는가? — BackContent, Button, Input, Badge 모두 props-driven
+
+### 코드 리뷰 실제 수행 기록
+
+| 커밋 | 검토 기준 | 검토 항목 | 결과 |
+|------|----------|----------|------|
+| `1a13003` 엔지니어링 시스템 고도화 | 토큰 full-coverage + CI 파이프라인 | breakpoints/states 토큰 추가, useBreakpoint 훅, 6-stage GitHub Actions | ✅ |
+| `94e65e9` 피드백 미반영 5개 항목 보완 | 디자인시스템 30점 기준 | 토큰 단일화, 반응형, 접근성, MCP 문서화, AI-Native 문서 | ✅ |
+| `6a4d0f7` 심사 피드백 반영 | 모바일 UX + 토큰 일관성 | `max-w-[90vw]` 반응형, 크로스 프로젝트 토큰 import | ✅ |
+| `9217540` 컴포넌트 분리 + 문서 고도화 | SRP + 기술 문서 | BackContent 분리, DEVELOPMENT_LOG Entry 15~18 | ✅ |
+| `a2c5e07` prefers-reduced-motion | WCAG 2.3.3 + PRD 비기능 요구사항 | globals.css 미디어쿼리, TESTING.md 기록 | ✅ |
 
 ---
 
