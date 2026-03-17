@@ -57,6 +57,7 @@ const config: Config = {
         display: ['var(--font-cinzel)', 'serif'],
         serif:   ['var(--font-cormorant)', 'serif'],
         sans:    ['var(--font-inter)', 'sans-serif'],
+        cute:    ['var(--font-nunito)', 'var(--font-inter)', 'sans-serif'],
       },
 
       fontSize:     tokens.fontSizes,
@@ -83,18 +84,39 @@ const config: Config = {
       },
 
       animation: {
-        'float':       'float 6s ease-in-out infinite',
-        'pulse-glow':  'pulseGlow 3.5s ease-in-out infinite',
-        'spin-slow':   'spin 22s linear infinite',
-        'twinkle':     'twinkle 3s ease-in-out infinite',
-        'twinkle-alt': 'twinkle 4.5s ease-in-out infinite',
-        'drift':       'drift 18s ease-in-out infinite',
-        'shimmer':     'shimmerSweep 3.5s linear infinite',
+        'float':        'float 6s ease-in-out infinite',
+        'pulse-glow':   'pulseGlow 3.5s ease-in-out infinite',
+        'spin-slow':    'spin 22s linear infinite',
+        'twinkle':      'twinkle 3s ease-in-out infinite',
+        'twinkle-alt':  'twinkle 4.5s ease-in-out infinite',
+        'drift':        'drift 18s ease-in-out infinite',
+        'shimmer':      'shimmerSweep 3.5s linear infinite',
+        'bounce-cute':  'bounceCute 1.8s ease-in-out infinite',
+        'wiggle':       'wiggle 2.4s ease-in-out infinite',
+        'pop-in':       'popIn 0.45s cubic-bezier(0.22,1.4,0.36,1) forwards',
+        'float-fast':   'float 3.5s ease-in-out infinite',
       },
       keyframes: {
         float: {
           '0%,100%': { transform: 'translateY(0px)' },
           '50%':     { transform: 'translateY(-20px)' },
+        },
+        bounceCute: {
+          '0%,100%': { transform: 'translateY(0px) rotate(0deg)' },
+          '30%':     { transform: 'translateY(-14px) rotate(-4deg)' },
+          '60%':     { transform: 'translateY(-7px) rotate(3deg)' },
+        },
+        wiggle: {
+          '0%,100%': { transform: 'rotate(0deg)' },
+          '20%':     { transform: 'rotate(-10deg)' },
+          '40%':     { transform: 'rotate(8deg)' },
+          '60%':     { transform: 'rotate(-5deg)' },
+          '80%':     { transform: 'rotate(4deg)' },
+        },
+        popIn: {
+          '0%':   { transform: 'scale(0.75)', opacity: '0' },
+          '70%':  { transform: 'scale(1.06)', opacity: '1' },
+          '100%': { transform: 'scale(1)',    opacity: '1' },
         },
         pulseGlow: {
           '0%,100%': { boxShadow: '0 0 45px rgba(168,85,247,0.45), 0 0 90px rgba(107,33,168,0.28)' },

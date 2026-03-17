@@ -181,7 +181,7 @@ export default function FortuneCard({ fortune, persona }: FortuneCardProps) {
           {/* ══ FRONT ══ */}
           <div className="absolute inset-0 backface-hidden">
             <div
-              className="glass-therapy-card rounded-2xl w-full h-full flex flex-col items-center justify-center gap-8 cursor-pointer select-none relative overflow-hidden"
+              className="glass-therapy-card rounded-2xl w-full h-full flex flex-col items-center justify-center gap-5 cursor-pointer select-none relative overflow-hidden"
               onClick={handleFlip}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleFlip() } }}
               role="button"
@@ -194,21 +194,45 @@ export default function FortuneCard({ fortune, persona }: FortuneCardProps) {
               <div className="absolute inset-0 rounded-2xl pointer-events-none"
                 style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.04) 50%, transparent 70%)' }} />
 
+              {/* ── 마스코트 + 말풍선 영역 ── */}
+              <div className="flex flex-col items-center gap-2 z-10">
+                {/* 말풍선 */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, y: 6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.4, ease: [0.22, 1.2, 0.36, 1] }}
+                >
+                  <div className="speech-bubble">
+                    <p className="font-cute text-xs font-600 whitespace-nowrap"
+                      style={{ color: '#f8f8ff' }}>
+                      {theme.speech}
+                    </p>
+                  </div>
+                </motion.div>
+
+                {/* 마스코트 이모지 — 통통 튀기 */}
+                <motion.div
+                  className="text-5xl"
+                  animate={{ y: [0, -10, 0], rotate: [0, -6, 6, 0] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}
+                >
+                  {theme.emoji}
+                </motion.div>
+              </div>
+
               <CrystalBall persona={persona} />
 
-              <div className="text-center z-10 px-8" style={{ marginTop: -8 }}>
-                <p className="font-display text-xs tracking-[0.28em] mb-2" style={{ color: accentColor }}>
-                  {theme.emoji} {theme.role.toUpperCase()}
-                </p>
-                <p className="font-serif-ele text-2xl mb-3" style={{ color: '#f8f8ff' }}>
-                  오늘의 운세
+              <div className="text-center z-10 px-8">
+                <p className="font-cute font-700 text-xs tracking-wider mb-1.5" style={{ color: accentColor }}>
+                  {theme.role}의 오늘 운세
                 </p>
                 <div className="flex items-center gap-2 justify-center">
-                  <span className="block h-px w-10" style={{ background: accentColor, opacity: 0.28 }} />
-                  <p className="text-xs tracking-widest" style={{ color: '#70709a' }}>
+                  <span className="block h-px w-8" style={{ background: accentColor, opacity: 0.30 }} />
+                  <p className="font-cute text-xs" style={{ color: '#70709a' }}>
                     수정구슬을 클릭하세요
                   </p>
-                  <span className="block h-px w-10" style={{ background: accentColor, opacity: 0.28 }} />
+                  <span className="block h-px w-8" style={{ background: accentColor, opacity: 0.30 }} />
                 </div>
               </div>
 

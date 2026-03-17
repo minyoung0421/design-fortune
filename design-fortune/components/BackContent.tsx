@@ -75,18 +75,24 @@ export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSa
 
       {/* ── 0: Header ── */}
       <motion.div variants={dealVariant(0)}
-        className="flex items-start justify-between mb-1.5 flex-shrink-0">
+        className="flex items-center justify-between mb-1.5 flex-shrink-0">
         <div>
-          <p className="font-display text-[10px] tracking-[0.22em]" style={{ color: textBright }}>
-            {theme.emoji} TODAY'S FORTUNE
+          <p className="font-cute font-700 text-[11px] tracking-wide" style={{ color: textBright }}>
+            {theme.emoji} 오늘의 운세
           </p>
-          <p className="text-[11px] mt-0.5" style={{ color: '#70709a' }}>{dateStr}</p>
+          <p className="font-cute text-[10px] mt-0.5" style={{ color: '#70709a' }}>{dateStr}</p>
         </div>
-        <div className="flex gap-0.5 mt-0.5">
-          {[...Array(5)].map((_, i) => (
-            <span key={i} className="text-xs"
-              style={{ color: i < fortune.energyLevel ? accent : 'rgba(255,255,255,0.15)' }}>✦</span>
-          ))}
+        {/* 에너지 바 */}
+        <div className="flex items-center gap-1">
+          <span className="font-cute text-[9px]" style={{ color: '#70709a' }}>에너지</span>
+          <div className="flex gap-0.5">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="rounded-full transition-all"
+                style={{ width: 6, height: i <= fortune.energyLevel ? 6 + i * 2 : 6,
+                  background: i <= fortune.energyLevel ? accent : 'rgba(255,255,255,0.12)',
+                  alignSelf: 'flex-end' }} />
+            ))}
+          </div>
         </div>
       </motion.div>
 
@@ -102,10 +108,10 @@ export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSa
 
       {/* ── 밈 ── */}
       <motion.div variants={dealVariant(0)} className="flex-shrink-0 mb-1.5">
-        <div className="flex items-center gap-2 rounded-lg px-3 py-2"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <span style={{ fontSize: 14 }}>{fortune.meme.emoji}</span>
-          <p className="text-xs leading-snug" style={{ color: '#b4b4d4' }}>
+        <div className="flex items-center gap-2 rounded-2xl px-3 py-2"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+          <span className="text-lg flex-shrink-0">{fortune.meme.emoji}</span>
+          <p className="font-cute text-xs font-600 leading-snug" style={{ color: '#f8f8ff' }}>
             {fortune.meme.text}
           </p>
         </div>
@@ -115,9 +121,9 @@ export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSa
 
       {/* ── 2: 컬러 팔레트 ── */}
       <motion.div variants={dealVariant(1)} className="flex-shrink-0 mb-1.5">
-        <p className="text-[10px] tracking-widest uppercase mb-1.5" style={{ color: '#70709a' }}>
-          행운의 컬러 팔레트
-          <span className="ml-1.5 normal-case tracking-normal text-[9px]" style={{ opacity: 0.6 }}>— 클릭해서 복사</span>
+        <p className="font-cute font-700 text-[10px] tracking-wide uppercase mb-1.5" style={{ color: '#70709a' }}>
+          🎨 행운의 팔레트
+          <span className="ml-1.5 normal-case tracking-normal font-400 text-[9px]" style={{ opacity: 0.6 }}>— 클릭해서 복사</span>
         </p>
         <div className="flex gap-2 mb-1">
           {fortune.palette.colors.map((sw) => (
@@ -145,8 +151,8 @@ export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSa
             </button>
           ))}
         </div>
-        <p className="text-sm font-medium" style={{ color: '#f8f8ff' }}>{fortune.palette.name}</p>
-        <p className="text-xs" style={{ color: textBright }}>
+        <p className="font-cute font-700 text-sm" style={{ color: '#f8f8ff' }}>{fortune.palette.name}</p>
+        <p className="font-cute text-xs" style={{ color: textBright }}>
           {fortune.palette.mood}
           <span style={{ color: '#70709a' }}>&nbsp;·&nbsp;{fortune.palette.useCase}</span>
         </p>
@@ -183,7 +189,7 @@ export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSa
 
       {/* ── 4: 격언 ── */}
       <motion.div variants={dealVariant(3)} className="flex-1 flex flex-col min-h-0 mb-1.5">
-        <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: '#70709a' }}>오늘의 격언</p>
+        <p className="font-cute font-700 text-[10px] tracking-wide uppercase mb-1" style={{ color: '#70709a' }}>💬 오늘의 격언</p>
         <blockquote className="font-serif-ele text-sm italic leading-relaxed flex-1"
           style={{ color: '#f8f8ff' }}>
           <span style={{ color: textBright, fontSize: '1.1rem', lineHeight: 1 }}>"</span>

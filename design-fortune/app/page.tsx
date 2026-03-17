@@ -20,7 +20,7 @@ export default function PersonaSelector() {
     setSelected(key)
     setLeaving(true)
     savePersona(key)
-    setTimeout(() => router.push('/fortune/'), 520)
+    setTimeout(() => router.push('/fortune/'), 480)
   }
 
   return (
@@ -30,103 +30,114 @@ export default function PersonaSelector() {
     >
       <StarField />
 
-      {/* ── Ambient glow blobs ── */}
+      {/* ── 배경 글로우 ── */}
       <div aria-hidden className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full pointer-events-none"
-          style={{ width: 600, height: 400, top: -80,
-            background: 'radial-gradient(circle, rgba(147,51,234,0.22) 0%, rgba(107,33,168,0.08) 50%, transparent 70%)',
-            filter: 'blur(50px)' }} />
-        <div className="absolute bottom-0 left-1/4 rounded-full pointer-events-none"
-          style={{ width: 320, height: 320, bottom: -60,
-            background: 'radial-gradient(circle, rgba(99,102,241,0.16) 0%, transparent 65%)',
-            filter: 'blur(45px)' }} />
-        <div className="absolute top-1/2 right-0 rounded-full pointer-events-none"
-          style={{ width: 280, height: 280,
-            background: 'radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 65%)',
-            filter: 'blur(40px)' }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full"
+          style={{ width: 700, height: 380, top: -100,
+            background: 'radial-gradient(ellipse, rgba(147,51,234,0.18) 0%, transparent 70%)',
+            filter: 'blur(60px)' }} />
       </div>
 
-      <div className="relative z-10 w-full max-w-lg mx-auto flex flex-col items-center gap-8">
+      <div className="relative z-10 w-full max-w-sm mx-auto flex flex-col items-center gap-7">
 
-        {/* ── Header ── */}
+        {/* ── 헤더 ── */}
         <motion.header
           className="text-center"
-          initial={{ opacity: 0, y: -24 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
         >
-          <p className="font-display text-[10px] tracking-[0.40em] uppercase mb-4"
+          {/* 마스코트 아이콘 */}
+          <motion.div
+            className="text-5xl mb-3 inline-block"
+            animate={{ y: [0, -8, 0], rotate: [0, -5, 5, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            🔮
+          </motion.div>
+
+          <p className="font-cute text-[11px] font-700 tracking-[0.30em] uppercase mb-2"
             style={{ color: 'rgba(192,132,252,0.7)' }}>
-            ✦ &nbsp; FortuneLog &nbsp; ✦
+            FortuneLog
           </p>
-          <h1 className="font-serif-ele leading-tight mb-3"
-            style={{ fontSize: '2.8rem', color: '#f8f8ff' }}>
-            직군별 멘탈 케어
+          <h1 className="font-cute font-800 leading-tight mb-1.5"
+            style={{ fontSize: '1.9rem', color: '#f8f8ff' }}>
+            오늘 나의 직군은?
           </h1>
-          <p className="text-sm leading-relaxed" style={{ color: '#b4b4d4' }}>
-            당신의 직군을 선택하면{' '}
-            <span style={{ color: 'rgba(192,132,252,0.8)' }}>오늘의 컬러테라피</span>를 시작합니다
+          <p className="font-cute text-sm" style={{ color: '#b4b4d4' }}>
+            직군을 선택하면 맞춤 컬러테라피가 시작돼요
           </p>
         </motion.header>
 
-        {/* ── Persona Grid ── */}
+        {/* ── 페르소나 카드 그리드 ── */}
         <AnimatePresence>
           {!leaving && (
             <motion.div
               className="grid grid-cols-2 gap-3 w-full"
               initial="hidden"
               animate="show"
-              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.3 } }}
-              variants={{ show: { transition: { staggerChildren: 0.08 } } }}
+              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
+              variants={{ show: { transition: { staggerChildren: 0.09 } } }}
             >
               {PERSONA_ORDER.map((key) => {
                 const p = PERSONAS[key]
                 const isSelected = selected === key
+
                 return (
                   <motion.button
                     key={key}
                     variants={{
-                      hidden: { opacity: 0, y: 28, scale: 0.95 },
-                      show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.4, ease: 'easeOut' } },
+                      hidden: { opacity: 0, y: 30, scale: 0.88 },
+                      show:   { opacity: 1, y: 0,  scale: 1,
+                        transition: { duration: 0.45, ease: [0.22, 1.2, 0.36, 1] } },
                     }}
-                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ scale: 1.04, y: -3 }}
+                    whileTap={{ scale: 0.96 }}
+                    animate={isSelected ? { scale: 1.08, opacity: 1 } : {}}
                     onClick={() => handleSelect(key)}
-                    className="persona-card flex flex-col items-center gap-3 p-5 text-center cursor-pointer"
+                    className="relative flex flex-col items-center gap-2.5 p-5 rounded-3xl text-center cursor-pointer overflow-hidden"
                     style={{
+                      background: p.cardGradient,
                       boxShadow: isSelected
-                        ? `0 0 0 2px ${p.color}, 0 0 28px ${p.color}55`
-                        : 'none',
-                      borderColor: isSelected ? p.color : undefined,
+                        ? `0 0 0 3px #fff, 0 8px 30px ${p.color}99`
+                        : `0 6px 24px ${p.color}44`,
                     }}
-                    aria-label={`${p.role} 직군 선택`}
+                    aria-label={`${p.role} 선택`}
                   >
-                    {/* Glow blob behind emoji */}
-                    <div className="relative flex items-center justify-center">
-                      <div className="absolute rounded-full pointer-events-none"
-                        style={{ width: 64, height: 64,
-                          background: `radial-gradient(circle, ${p.color}30 0%, transparent 70%)`,
-                          filter: 'blur(8px)' }} />
-                      <span className="relative" style={{ fontSize: '2.2rem', lineHeight: 1 }}>
-                        {p.emoji}
-                      </span>
-                    </div>
+                    {/* 카드 내부 하이라이트 */}
+                    <div className="absolute inset-0 rounded-3xl pointer-events-none"
+                      style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%)' }} />
 
+                    {/* 이모지 */}
+                    <motion.span
+                      className="relative text-4xl"
+                      animate={{ rotate: [0, -6, 6, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut',
+                        delay: PERSONA_ORDER.indexOf(key) * 0.6 }}
+                    >
+                      {p.emoji}
+                    </motion.span>
+
+                    {/* 직군명 */}
                     <div>
-                      <p className="font-semibold text-base mb-0.5" style={{ color: '#f8f8ff' }}>
+                      <p className="font-cute font-800 text-base text-white leading-tight">
                         {p.role}
                       </p>
-                      <p className="text-xs" style={{ color: p.color, opacity: 0.9 }}>
+                      <p className="font-cute text-xs font-600 mt-0.5"
+                        style={{ color: 'rgba(255,255,255,0.65)' }}>
                         {p.label}
                       </p>
                     </div>
 
-                    <p className="text-[11px] leading-snug px-1" style={{ color: '#70709a' }}>
+                    {/* 태그라인 */}
+                    <p className="font-cute text-[11px] leading-snug px-1"
+                      style={{ color: 'rgba(255,255,255,0.75)' }}>
                       "{p.tagline}"
                     </p>
 
-                    {/* Bottom accent bar */}
-                    <div className="w-full h-0.5 rounded-full mt-1"
-                      style={{ background: `linear-gradient(to right, transparent, ${p.color}80, transparent)` }} />
+                    {/* 하단 포인트 */}
+                    <div className="w-6 h-1 rounded-full mt-0.5"
+                      style={{ background: 'rgba(255,255,255,0.40)' }} />
                   </motion.button>
                 )
               })}
@@ -134,15 +145,15 @@ export default function PersonaSelector() {
           )}
         </AnimatePresence>
 
-        {/* ── Footer hint ── */}
+        {/* ── 하단 안내 ── */}
         <motion.p
-          className="text-xs tracking-widest text-center"
+          className="font-cute text-xs text-center"
           style={{ color: '#70709a' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
+          transition={{ delay: 0.7 }}
         >
-          매일 자정 컬러테라피가 갱신됩니다
+          매일 자정 컬러테라피가 갱신됩니다 ✦
         </motion.p>
       </div>
     </main>

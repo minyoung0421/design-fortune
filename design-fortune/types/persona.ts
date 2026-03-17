@@ -17,7 +17,9 @@ export interface PersonaTheme {
   emoji: string
   description: string
   tagline: string     // 공감 한줄
+  speech: string      // 수정구슬 앞 말풍선 텍스트
   color: string       // primary hex (selector UI용)
+  cardGradient: string // 셀렉터 카드 배경 그라디언트
   therapy: Record<TherapyState, TherapyPalette>
 }
 

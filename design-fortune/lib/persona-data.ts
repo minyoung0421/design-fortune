@@ -15,7 +15,9 @@ export const PERSONAS: Record<PersonaKey, PersonaTheme> = {
     emoji: '📊',
     description: '제품의 방향을 결정하는 나침반',
     tagline: '로드맵이 또 바뀌었다',
+    speech: '오늘 스프린트 무사히 끝날 수 있을까요…?',
     color: '#6366F1',
+    cardGradient: 'linear-gradient(145deg, #4338CA 0%, #6366F1 60%, #818CF8 100%)',
     therapy: {
       calm: {
         bg: '#020818',
@@ -51,7 +53,9 @@ export const PERSONAS: Record<PersonaKey, PersonaTheme> = {
     emoji: '🎨',
     description: '아이디어를 픽셀로 번역하는 마법사',
     tagline: '좀 더 팝하게, 근데 심플하게',
+    speech: '오늘의 영감이 기다리고 있어요! ✨',
     color: '#A855F7',
+    cardGradient: 'linear-gradient(145deg, #7C3AED 0%, #A855F7 60%, #C084FC 100%)',
     therapy: {
       calm: {
         bg: '#080018',
@@ -87,7 +91,9 @@ export const PERSONAS: Record<PersonaKey, PersonaTheme> = {
     emoji: '💻',
     description: '로직으로 세상을 만드는 엔지니어',
     tagline: '로컬에서는 됐는데요',
+    speech: '오늘은 버그 없는 날이길 바라며…🙏',
     color: '#10B981',
+    cardGradient: 'linear-gradient(145deg, #047857 0%, #10B981 60%, #34D399 100%)',
     therapy: {
       calm: {
         bg: '#001810',
@@ -123,7 +129,9 @@ export const PERSONAS: Record<PersonaKey, PersonaTheme> = {
     emoji: '🔍',
     description: '완벽함을 추구하는 디테일의 달인',
     tagline: '버그는 내가 먼저 찾는다',
+    speech: '오늘도 버그 사냥 나설 준비 됐죠? 🐛',
     color: '#F59E0B',
+    cardGradient: 'linear-gradient(145deg, #B45309 0%, #F59E0B 60%, #FCD34D 100%)',
     therapy: {
       calm: {
         bg: '#180A00',

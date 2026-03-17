@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Cinzel_Decorative, Cormorant_Garamond, Inter } from 'next/font/google'
+import { Cinzel_Decorative, Cormorant_Garamond, Inter, Nunito } from 'next/font/google'
 import './globals.css'
 
 /* ── next/font/google 사용 — @import 없이 폰트 로드 ── */
@@ -22,6 +22,12 @@ const inter = Inter({
   variable: '--font-inter',
   display: 'swap',
 })
+const nunito = Nunito({
+  weight: ['400', '600', '700', '800'],
+  subsets: ['latin'],
+  variable: '--font-nunito',
+  display: 'swap',
+})
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -37,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="ko"
-      className={`${cinzel.variable} ${cormorant.variable} ${inter.variable}`}
+      className={`${cinzel.variable} ${cormorant.variable} ${inter.variable} ${nunito.variable}`}
       suppressHydrationWarning
     >
       <body>{children}</body>
