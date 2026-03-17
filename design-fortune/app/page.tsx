@@ -1,124 +1,150 @@
-import FortuneCard from '@/components/FortuneCard'
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { PERSONAS } from '@/lib/persona-data'
+import { savePersona } from '@/lib/history'
+import type { PersonaKey } from '@/types/persona'
 import StarField from '@/components/StarField'
 
-export default function Home() {
+const PERSONA_ORDER: PersonaKey[] = ['pm', 'designer', 'developer', 'qa']
+
+export default function PersonaSelector() {
+  const router = useRouter()
+  const [selected, setSelected] = useState<PersonaKey | null>(null)
+  const [leaving, setLeaving] = useState(false)
+
+  const handleSelect = (key: PersonaKey) => {
+    if (leaving) return
+    setSelected(key)
+    setLeaving(true)
+    savePersona(key)
+    setTimeout(() => router.push('/fortune/'), 520)
+  }
+
   return (
     <main
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: 'var(--cosmos)' }}
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 py-10"
+      style={{ background: '#030014' }}
     >
-
-      {/* ── Layer 1: Mystic gradient — 상단 보라빛 네뷸라 ── */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse 110% 55% at 50% -8%, #1e0b40 0%, #0d0030 38%, #030014 68%)',
-        }}
-      />
-
-      {/* ── Layer 2: Ambient glow blobs ── */}
-      {/* Center top blob */}
-      <div
-        aria-hidden="true"
-        className="absolute pointer-events-none rounded-full"
-        style={{
-          top: -80, left: '50%', transform: 'translateX(-50%)',
-          width: 720, height: 500,
-          background: 'radial-gradient(circle, rgba(147,51,234,0.28) 0%, rgba(107,33,168,0.12) 50%, transparent 70%)',
-          filter: 'blur(40px)',
-        }}
-      />
-      {/* Bottom-left blob */}
-      <div
-        aria-hidden="true"
-        className="absolute pointer-events-none rounded-full"
-        style={{
-          bottom: -60, left: '15%',
-          width: 380, height: 380,
-          background: 'radial-gradient(circle, rgba(99,102,241,0.20) 0%, transparent 65%)',
-          filter: 'blur(50px)',
-        }}
-      />
-      {/* Right blob */}
-      <div
-        aria-hidden="true"
-        className="absolute pointer-events-none rounded-full"
-        style={{
-          top: '40%', right: '-5%',
-          width: 300, height: 300,
-          background: 'radial-gradient(circle, rgba(168,85,247,0.14) 0%, transparent 65%)',
-          filter: 'blur(45px)',
-        }}
-      />
-
-      {/* ── Layer 3: Floating dust particles ── */}
-      {[
-        { w: 2, h: 2, top: '15%', left: '20%', delay: '0s',   dur: '18s' },
-        { w: 3, h: 3, top: '30%', left: '75%', delay: '3s',   dur: '22s' },
-        { w: 2, h: 2, top: '55%', left: '10%', delay: '6s',   dur: '16s' },
-        { w: 4, h: 4, top: '70%', left: '85%', delay: '1.5s', dur: '25s' },
-        { w: 2, h: 2, top: '82%', left: '35%', delay: '9s',   dur: '20s' },
-        { w: 3, h: 3, top: '12%', left: '60%', delay: '4s',   dur: '19s' },
-      ].map((p, i) => (
-        <div
-          key={i}
-          aria-hidden="true"
-          className="absolute pointer-events-none rounded-full animate-drift"
-          style={{
-            width: p.w, height: p.h,
-            top: p.top, left: p.left,
-            background: 'var(--ink-bright)',
-            opacity: 0.25,
-            animationDelay: p.delay,
-            animationDuration: p.dur,
-          }}
-        />
-      ))}
-
-      {/* ── Layer 4: Star canvas ── */}
       <StarField />
 
-      {/* ── Main Content ── */}
-      <div className="relative z-10 flex flex-col items-center gap-10 px-4 py-8 sm:py-16 w-full max-w-lg mx-auto">
-
-        {/* Header */}
-        <header className="text-center">
-          <p
-            className="font-display text-xs tracking-[0.35em] uppercase mb-4"
-            style={{ color: 'var(--ink-bright)' }}
-          >
-            ✦ &nbsp; Design Fortune &nbsp; ✦
-          </p>
-          <h1
-            className="font-serif-ele leading-tight mb-3"
-            style={{ fontSize: '3.25rem', color: 'var(--ink)' }}
-          >
-            오늘의<br />
-            <span className="text-glow" style={{ color: 'var(--ink)' }}>
-              디자인 운세
-            </span>
-          </h1>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
-            매일 새로운 영감으로{' '}
-            <span style={{ color: 'var(--ink-faint)' }}>디자이너의 하루를 열어드립니다</span>
-          </p>
-        </header>
-
-        {/* Fortune Card */}
-        <FortuneCard />
-
-        {/* Footer */}
-        <p className="text-xs tracking-wider text-center" style={{ color: 'var(--ink-faint)' }}>
-          운세는 매일 자정에 갱신됩니다
-        </p>
+      {/* ── Ambient glow blobs ── */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full pointer-events-none"
+          style={{ width: 600, height: 400, top: -80,
+            background: 'radial-gradient(circle, rgba(147,51,234,0.22) 0%, rgba(107,33,168,0.08) 50%, transparent 70%)',
+            filter: 'blur(50px)' }} />
+        <div className="absolute bottom-0 left-1/4 rounded-full pointer-events-none"
+          style={{ width: 320, height: 320, bottom: -60,
+            background: 'radial-gradient(circle, rgba(99,102,241,0.16) 0%, transparent 65%)',
+            filter: 'blur(45px)' }} />
+        <div className="absolute top-1/2 right-0 rounded-full pointer-events-none"
+          style={{ width: 280, height: 280,
+            background: 'radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 65%)',
+            filter: 'blur(40px)' }} />
       </div>
 
-      {/* ── Bottom fade ── */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
-        style={{ background: 'linear-gradient(to top, var(--cosmos), transparent)' }}
-      />
+      <div className="relative z-10 w-full max-w-lg mx-auto flex flex-col items-center gap-8">
+
+        {/* ── Header ── */}
+        <motion.header
+          className="text-center"
+          initial={{ opacity: 0, y: -24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
+          <p className="font-display text-[10px] tracking-[0.40em] uppercase mb-4"
+            style={{ color: 'rgba(192,132,252,0.7)' }}>
+            ✦ &nbsp; FortuneLog &nbsp; ✦
+          </p>
+          <h1 className="font-serif-ele leading-tight mb-3"
+            style={{ fontSize: '2.8rem', color: '#f8f8ff' }}>
+            직군별 멘탈 케어
+          </h1>
+          <p className="text-sm leading-relaxed" style={{ color: '#b4b4d4' }}>
+            당신의 직군을 선택하면{' '}
+            <span style={{ color: 'rgba(192,132,252,0.8)' }}>오늘의 컬러테라피</span>를 시작합니다
+          </p>
+        </motion.header>
+
+        {/* ── Persona Grid ── */}
+        <AnimatePresence>
+          {!leaving && (
+            <motion.div
+              className="grid grid-cols-2 gap-3 w-full"
+              initial="hidden"
+              animate="show"
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.3 } }}
+              variants={{ show: { transition: { staggerChildren: 0.08 } } }}
+            >
+              {PERSONA_ORDER.map((key) => {
+                const p = PERSONAS[key]
+                const isSelected = selected === key
+                return (
+                  <motion.button
+                    key={key}
+                    variants={{
+                      hidden: { opacity: 0, y: 28, scale: 0.95 },
+                      show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.4, ease: 'easeOut' } },
+                    }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleSelect(key)}
+                    className="persona-card flex flex-col items-center gap-3 p-5 text-center cursor-pointer"
+                    style={{
+                      boxShadow: isSelected
+                        ? `0 0 0 2px ${p.color}, 0 0 28px ${p.color}55`
+                        : 'none',
+                      borderColor: isSelected ? p.color : undefined,
+                    }}
+                    aria-label={`${p.role} 직군 선택`}
+                  >
+                    {/* Glow blob behind emoji */}
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute rounded-full pointer-events-none"
+                        style={{ width: 64, height: 64,
+                          background: `radial-gradient(circle, ${p.color}30 0%, transparent 70%)`,
+                          filter: 'blur(8px)' }} />
+                      <span className="relative" style={{ fontSize: '2.2rem', lineHeight: 1 }}>
+                        {p.emoji}
+                      </span>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-base mb-0.5" style={{ color: '#f8f8ff' }}>
+                        {p.role}
+                      </p>
+                      <p className="text-xs" style={{ color: p.color, opacity: 0.9 }}>
+                        {p.label}
+                      </p>
+                    </div>
+
+                    <p className="text-[11px] leading-snug px-1" style={{ color: '#70709a' }}>
+                      "{p.tagline}"
+                    </p>
+
+                    {/* Bottom accent bar */}
+                    <div className="w-full h-0.5 rounded-full mt-1"
+                      style={{ background: `linear-gradient(to right, transparent, ${p.color}80, transparent)` }} />
+                  </motion.button>
+                )
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── Footer hint ── */}
+        <motion.p
+          className="text-xs tracking-widest text-center"
+          style={{ color: '#70709a' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          매일 자정 컬러테라피가 갱신됩니다
+        </motion.p>
+      </div>
     </main>
   )
 }

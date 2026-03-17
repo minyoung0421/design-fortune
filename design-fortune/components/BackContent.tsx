@@ -1,42 +1,63 @@
 'use client'
 
-/**
- * BackContent — FortuneCard 뒷면 컴포넌트
- *
- * 책임: 오늘의 운세 결과 표시 (팔레트 · 폰트 · 격언 · 에너지 레벨)
- * FortuneCard.tsx에서 분리하여 단일 책임 원칙(SRP) 준수.
- *
- * 포함 기능:
- *   - 컬러 팔레트 HEX 복사 (토스트 피드백 포함)
- *   - 폰트 페어링 표시
- *   - 디자이너 격언
- *   - 포토카드 저장 · 앞면으로 되돌리기 버튼
- */
-
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { generateFortune } from '@/lib/fortune-data'
+import { getPersona, getTherapyState } from '@/lib/persona-data'
+import { saveFortuneEntry, todayStr } from '@/lib/history'
+import type { DesignerFortune } from '@/lib/fortune-data'
+import type { PersonaKey } from '@/types/persona'
 
-// ── 섹션 등장 애니메이션 variants ─────────────────────────────────────────
-export const SEC = {
-  hidden: { opacity: 0, y: 10 },
-  show: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.08, duration: 0.3, ease: 'easeOut' },
-  }),
+/* ── 포커 딜 variants — 각 섹션이 중앙에서 날아오며 정착 ── */
+const DEAL_ORIGINS = [
+  { x: -60, y: -40, rotate: -8 },   // 운세 메시지 — 좌상
+  { x:  60, y: -30, rotate:  7 },   // 팔레트       — 우상
+  { x: -50, y:  30, rotate: -5 },   // 폰트         — 좌하
+  { x:  50, y:  40, rotate:  6 },   // 격언         — 우하
+  { x:   0, y: -20, rotate:  0 },   // 액션 버튼    — 중앙위
+]
+
+function dealVariant(i: number) {
+  const o = DEAL_ORIGINS[i] ?? DEAL_ORIGINS[0]
+  return {
+    hidden: { opacity: 0, scale: 0.55, x: o.x, y: o.y, rotate: o.rotate },
+    show: {
+      opacity: 1, scale: 1, x: 0, y: 0, rotate: 0,
+      transition: { delay: i * 0.12 + 0.05, duration: 0.45,
+        ease: [0.22, 1.2, 0.36, 1] },  // spring-like overshoot
+    },
+  }
 }
 
+/* ── Props ─────────────────────────────────────────────── */
 export interface BackProps {
-  fortune: ReturnType<typeof generateFortune>
-  onReset: () => void
-  onSave: () => void
-  onCopyHex: (hex: string) => void
-  isSaving: boolean
+  fortune: DesignerFortune
+  persona: PersonaKey
+  onReset:    () => void
+  onSave:     () => void
+  onCopyHex:  (hex: string) => void
+  isSaving:   boolean
 }
 
-export function BackContent({ fortune, onReset, onSave, onCopyHex, isSaving }: BackProps) {
+/* ── BackContent ─────────────────────────────────────────── */
+export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSaving }: BackProps) {
   const [copiedHex, setCopiedHex] = useState<string | null>(null)
-  const dateStr = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
+  const theme        = getPersona(persona)
+  const therapyState = getTherapyState(fortune.energyLevel)
+  const accent       = theme.therapy[therapyState].accent
+  const textBright   = theme.therapy[therapyState].textBright
+  const border       = theme.therapy[therapyState].border
+  const dateStr      = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
+
+  /* 히스토리 자동 저장 */
+  useEffect(() => {
+    saveFortuneEntry({
+      date:        todayStr(),
+      persona,
+      energyLevel: fortune.energyLevel,
+      paletteName: fortune.palette.name,
+      memeText:    fortune.meme.text,
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCopy = (hex: string) => {
     onCopyHex(hex)
@@ -44,180 +65,155 @@ export function BackContent({ fortune, onReset, onSave, onCopyHex, isSaving }: B
     setTimeout(() => setCopiedHex(null), 1800)
   }
 
-  return (
-    <motion.div className="w-full h-full flex flex-col p-5" initial="hidden" animate="show">
+  const divider = (
+    <div className="h-px flex-shrink-0 my-1.5"
+      style={{ background: `linear-gradient(to right, transparent, ${border.replace(')', ', 0.5)')}, transparent)` }} />
+  )
 
-      {/* ── Header ── */}
-      <motion.div custom={0} variants={SEC} className="flex items-start justify-between mb-2 flex-shrink-0">
+  return (
+    <motion.div className="w-full h-full flex flex-col p-4" initial="hidden" animate="show">
+
+      {/* ── 0: Header ── */}
+      <motion.div variants={dealVariant(0)}
+        className="flex items-start justify-between mb-1.5 flex-shrink-0">
         <div>
-          <p className="font-display text-[10px] tracking-[0.22em]" style={{ color: 'var(--ink-bright)' }}>
-            TODAY'S FORTUNE
+          <p className="font-display text-[10px] tracking-[0.22em]" style={{ color: textBright }}>
+            {theme.emoji} TODAY'S FORTUNE
           </p>
-          <p className="text-[11px] mt-0.5" style={{ color: 'var(--ink-faint)' }}>{dateStr}</p>
+          <p className="text-[11px] mt-0.5" style={{ color: '#70709a' }}>{dateStr}</p>
         </div>
         <div className="flex gap-0.5 mt-0.5">
           {[...Array(5)].map((_, i) => (
             <span key={i} className="text-xs"
-              style={{ color: i < fortune.energyLevel ? 'var(--gold)' : 'var(--ink-faint)' }}>✦</span>
+              style={{ color: i < fortune.energyLevel ? accent : 'rgba(255,255,255,0.15)' }}>✦</span>
           ))}
         </div>
       </motion.div>
 
-      {/* ── 오늘의 고충 밈 ── */}
-      <motion.div custom={0.6} variants={SEC} className="flex-shrink-0 mb-2">
-        <div
-          className="flex items-center gap-2 rounded-lg px-3 py-2"
-          style={{
-            background: 'rgba(168,85,247,0.08)',
-            border: '1px solid rgba(168,85,247,0.18)',
-          }}
-        >
-          <span style={{ fontSize: 15 }}>{fortune.meme.emoji}</span>
-          <p className="text-xs leading-snug" style={{ color: 'var(--ink-soft)' }}>
+      {/* ── 1: 운세 예감 메시지 ── */}
+      <motion.div variants={dealVariant(0)} className="flex-shrink-0 mb-1.5">
+        <div className="rounded-lg px-3 py-2.5"
+          style={{ background: `${accent}15`, border: `1px solid ${accent}35` }}>
+          <p className="font-serif-ele text-sm italic leading-snug" style={{ color: '#f8f8ff' }}>
+            {fortune.fortuneMsg}
+          </p>
+        </div>
+      </motion.div>
+
+      {/* ── 밈 ── */}
+      <motion.div variants={dealVariant(0)} className="flex-shrink-0 mb-1.5">
+        <div className="flex items-center gap-2 rounded-lg px-3 py-2"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <span style={{ fontSize: 14 }}>{fortune.meme.emoji}</span>
+          <p className="text-xs leading-snug" style={{ color: '#b4b4d4' }}>
             {fortune.meme.text}
           </p>
         </div>
       </motion.div>
 
-      <motion.div custom={1} variants={SEC}
-        className="h-px flex-shrink-0 mb-2"
-        style={{ background: 'rgba(168,85,247,0.18)' }}
-      />
+      {divider}
 
-      {/* ── 컬러 팔레트 ── */}
-      <motion.div custom={1.5} variants={SEC} className="flex-shrink-0 mb-2">
-        <p className="text-[10px] tracking-widest uppercase mb-2" style={{ color: 'var(--ink-faint)' }}>
+      {/* ── 2: 컬러 팔레트 ── */}
+      <motion.div variants={dealVariant(1)} className="flex-shrink-0 mb-1.5">
+        <p className="text-[10px] tracking-widest uppercase mb-1.5" style={{ color: '#70709a' }}>
           행운의 컬러 팔레트
-          <span className="ml-2 normal-case tracking-normal" style={{ color: 'var(--ink-faint)', opacity: 0.7 }}>
-            — 클릭해서 HEX 복사
-          </span>
+          <span className="ml-1.5 normal-case tracking-normal text-[9px]" style={{ opacity: 0.6 }}>— 클릭해서 복사</span>
         </p>
-        <div className="flex gap-2 mb-1.5">
+        <div className="flex gap-2 mb-1">
           {fortune.palette.colors.map((sw) => (
-            <button
-              key={sw.hex}
-              data-no-export="true"
+            <button key={sw.hex} data-no-export="true"
               onClick={() => handleCopy(sw.hex)}
-              className="flex flex-col items-center gap-1 group relative cursor-pointer"
-              aria-label={`${sw.hex} 복사`}
-            >
-              <div
-                className="rounded-full swatch-ring relative overflow-hidden"
-                style={{ width: 34, height: 34, background: sw.hex }}
-              >
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+              aria-label={`${sw.hex} 복사`}>
+              <div className="rounded-full swatch-ring relative overflow-hidden"
+                style={{ width: 32, height: 32, background: sw.hex }}>
                 <AnimatePresence>
                   {copiedHex === sw.hex && (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.5 }}
+                      initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}
                       className="absolute inset-0 flex items-center justify-center rounded-full"
-                      style={{ background: 'rgba(0,0,0,0.55)' }}
-                    >
-                      <span style={{ fontSize: 14, color: '#fff' }}>✓</span>
+                      style={{ background: 'rgba(0,0,0,0.55)' }}>
+                      <span style={{ fontSize: 12, color: '#fff' }}>✓</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-              <span
-                className="font-mono text-[8px] transition-colors"
-                style={{ color: copiedHex === sw.hex ? 'var(--ink-bright)' : 'var(--ink-faint)' }}
-              >
+              <span className="font-mono text-[8px]"
+                style={{ color: copiedHex === sw.hex ? textBright : '#70709a' }}>
                 {sw.hex.slice(1)}
               </span>
             </button>
           ))}
         </div>
-        <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{fortune.palette.name}</p>
-        <p className="text-xs" style={{ color: 'var(--ink-bright)' }}>
+        <p className="text-sm font-medium" style={{ color: '#f8f8ff' }}>{fortune.palette.name}</p>
+        <p className="text-xs" style={{ color: textBright }}>
           {fortune.palette.mood}
-          <span style={{ color: 'var(--ink-faint)' }}>&nbsp;·&nbsp;{fortune.palette.useCase}</span>
+          <span style={{ color: '#70709a' }}>&nbsp;·&nbsp;{fortune.palette.useCase}</span>
         </p>
       </motion.div>
 
-      <motion.div custom={2} variants={SEC}
-        className="h-px flex-shrink-0 mb-2"
-        style={{ background: 'rgba(168,85,247,0.18)' }}
-      />
+      {divider}
 
-      {/* ── 폰트 페어링 ── */}
-      <motion.div custom={2.5} variants={SEC} className="flex-shrink-0 mb-2">
-        <p className="text-[10px] tracking-widest uppercase mb-1.5" style={{ color: 'var(--ink-faint)' }}>
-          오늘의 폰트 페어링
-        </p>
-        <div className="glass rounded-lg px-3.5 py-2 mb-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{fortune.font.headline}</span>
-            <span style={{ color: 'var(--ink-faint)', fontSize: 10 }}>+</span>
-            <span className="text-xs" style={{ color: 'var(--ink-soft)' }}>{fortune.font.body}</span>
+      {/* ── 3: 폰트 페어링 + 럭키 요소 ── */}
+      <motion.div variants={dealVariant(2)} className="flex-shrink-0 mb-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1">
+            <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: '#70709a' }}>폰트 페어링</p>
+            <div className="rounded-lg px-3 py-1.5"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xs font-semibold" style={{ color: '#f8f8ff' }}>{fortune.font.headline}</span>
+                <span style={{ color: '#70709a', fontSize: 9 }}>+</span>
+                <span className="text-[11px]" style={{ color: '#b4b4d4' }}>{fortune.font.body}</span>
+              </div>
+              <p className="text-[10px]" style={{ color: textBright }}>{fortune.font.style}</p>
+            </div>
           </div>
-          <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-bright)' }}>
-            {fortune.font.style}
-          </p>
+          <div className="text-center flex-shrink-0">
+            <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: '#70709a' }}>행운 요소</p>
+            <div className="rounded-lg px-2.5 py-1.5"
+              style={{ background: `${accent}18`, border: `1px solid ${accent}35` }}>
+              <p className="text-xs font-medium" style={{ color: textBright }}>{fortune.luckyElement}</p>
+            </div>
+          </div>
         </div>
-        <p className="text-[10px]" style={{ color: 'var(--ink-faint)' }}>
-          {fortune.palette.mood} 무드와 어울리는 조합
-        </p>
       </motion.div>
 
-      <motion.div custom={3} variants={SEC}
-        className="h-px flex-shrink-0 mb-2"
-        style={{ background: 'rgba(168,85,247,0.18)' }}
-      />
+      {divider}
 
-      {/* ── 격언 ── */}
-      <motion.div custom={3.5} variants={SEC} className="flex-1 flex flex-col min-h-0">
-        <p className="text-[10px] tracking-widest uppercase mb-1.5" style={{ color: 'var(--ink-faint)' }}>
-          오늘의 격언
-        </p>
-        <blockquote
-          className="font-serif-ele text-sm italic leading-relaxed flex-1"
-          style={{ color: 'var(--ink)' }}
-        >
-          <span style={{ color: 'var(--ink-bright)', fontSize: '1.2rem', lineHeight: 1 }}>"</span>
-          {fortune.quote.text.length > 55 ? fortune.quote.text.slice(0, 55) + '…' : fortune.quote.text}
-          <span style={{ color: 'var(--ink-bright)', fontSize: '1.2rem', lineHeight: 1 }}>"</span>
+      {/* ── 4: 격언 ── */}
+      <motion.div variants={dealVariant(3)} className="flex-1 flex flex-col min-h-0 mb-1.5">
+        <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: '#70709a' }}>오늘의 격언</p>
+        <blockquote className="font-serif-ele text-sm italic leading-relaxed flex-1"
+          style={{ color: '#f8f8ff' }}>
+          <span style={{ color: textBright, fontSize: '1.1rem', lineHeight: 1 }}>"</span>
+          {fortune.quote.text.length > 60 ? fortune.quote.text.slice(0, 60) + '…' : fortune.quote.text}
+          <span style={{ color: textBright, fontSize: '1.1rem', lineHeight: 1 }}>"</span>
         </blockquote>
-        <p className="text-xs text-right mb-2" style={{ color: 'var(--ink-bright)' }}>
-          — {fortune.quote.author}
-        </p>
+        <p className="text-xs text-right" style={{ color: textBright }}>— {fortune.quote.author}</p>
       </motion.div>
 
-      {/* ── 버튼 영역 ── */}
-      <motion.div custom={4} variants={SEC} className="flex gap-2 flex-shrink-0" data-no-export="true">
-        <button
-          onClick={onSave}
-          disabled={isSaving}
+      {/* ── 5: 액션 버튼 ── */}
+      <motion.div variants={dealVariant(4)} className="flex gap-2 flex-shrink-0" data-no-export="true">
+        <button onClick={onSave} disabled={isSaving}
           className="flex-1 py-2 rounded-md text-xs tracking-wide transition-all duration-200 flex items-center justify-center gap-1.5"
           style={{
-            background: isSaving
-              ? 'rgba(168,85,247,0.15)'
-              : 'linear-gradient(135deg, rgba(168,85,247,0.25) 0%, rgba(139,92,246,0.15) 100%)',
-            border: '1px solid rgba(168,85,247,0.45)',
-            color: 'var(--ink-bright)',
-          }}
-        >
+            background: isSaving ? `${accent}25` : `linear-gradient(135deg, ${accent}40 0%, ${accent}20 100%)`,
+            border: `1px solid ${accent}70`,
+            color: textBright,
+          }}>
           {isSaving ? (
-            <>
-              <span className="animate-spin inline-block" style={{ fontSize: 11 }}>⟳</span>
-              저장 중…
-            </>
+            <><span className="animate-spin inline-block" style={{ fontSize: 11 }}>⟳</span>저장 중…</>
           ) : (
-            <>📸 포토카드로 저장</>
+            <>📸 포토카드 저장</>
           )}
         </button>
-        <button
-          onClick={onReset}
+        <button onClick={onReset}
           className="px-3 py-2 rounded-md text-xs tracking-wide transition-all duration-200"
-          style={{
-            border: '1px solid rgba(168,85,247,0.25)',
-            color: 'var(--ink-faint)',
-            background: 'transparent',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(168,85,247,0.08)')}
+          style={{ border: '1px solid rgba(255,255,255,0.12)', color: '#70709a', background: 'transparent' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          aria-label="카드 앞면으로"
-        >
+          aria-label="카드 앞면으로">
           ↩
         </button>
       </motion.div>

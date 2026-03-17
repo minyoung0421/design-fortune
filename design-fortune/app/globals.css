@@ -30,6 +30,14 @@
   --font-display: var(--font-cinzel), serif;
   --font-serif:   var(--font-cormorant), serif;
   --font-sans:    var(--font-inter), sans-serif;
+
+  /* ── Therapy CSS vars (dynamically overridden per persona) ── */
+  --t-bg:          #030014;
+  --t-surface:     #0a0028;
+  --t-glow:        rgba(168, 85, 247, 0.55);
+  --t-accent:      #a855f7;
+  --t-border:      rgba(168, 85, 247, 0.22);
+  --t-text-bright: #c084fc;
 }
 
 /* ── Base ─────────────────────────────────────────────── */
@@ -37,12 +45,20 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: var(--cosmos);
+  background: var(--t-bg, var(--cosmos));
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  transition: background-color 0.7s ease;
+}
+
+/* ── Therapy wrapper — persona 전환 시 부드러운 컬러 변경 ── */
+.therapy-root {
+  transition:
+    background-color 0.7s ease,
+    color 0.4s ease;
 }
 
 /* ── Font helpers ──────────────────────────────────────── */
@@ -70,6 +86,44 @@ body {
       0 8px 40px rgba(0, 0, 0, 0.55),
       0 0 0 1px rgba(255, 255, 255, 0.04) inset,
       0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  }
+  /* therapy-aware glassmorphism — border/glow는 persona 컬러 따라감 */
+  .glass-therapy {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(24px) saturate(170%);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    border: 1px solid var(--t-border);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.50),
+      0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    transition: border-color 0.5s ease, box-shadow 0.5s ease;
+  }
+  .glass-therapy-card {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--t-accent) 12%, transparent) 0%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid var(--t-border);
+    box-shadow:
+      0 8px 40px rgba(0, 0, 0, 0.55),
+      0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+      0 1px 0 rgba(255, 255, 255, 0.08) inset;
+    transition: border-color 0.5s ease;
+  }
+  /* persona selector card */
+  .persona-card {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 1.25rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .persona-card:hover {
+    transform: translateY(-4px) scale(1.02);
   }
 }
 

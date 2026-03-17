@@ -29,8 +29,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Design Fortune — 오늘의 디자인 운세',
-  description: '디자이너를 위한 힐링과 영감의 운세 카드',
+  title: 'FortuneLog — 직군별 멘탈 케어 컬러테라피',
+  description: 'PM, 디자이너, 개발자, QA를 위한 컬러테라피 기반 멘탈 케어 플랫폼',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

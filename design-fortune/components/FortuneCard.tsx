@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useMemo, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { generateFortune } from '@/lib/fortune-data'
 import { BackContent } from './BackContent'
+import { getPersona, getTherapyState } from '@/lib/persona-data'
+import type { DesignerFortune } from '@/lib/fortune-data'
+import type { PersonaKey } from '@/types/persona'
 
-/* ────────────────────────────────────────────────────────
-   Toast
-──────────────────────────────────────────────────────── */
+/* ── Toast ─────────────────────────────────────────────── */
 function Toast({ msg }: { msg: string }) {
   return (
     <motion.div
@@ -17,92 +17,65 @@ function Toast({ msg }: { msg: string }) {
       transition={{ duration: 0.22, ease: 'easeOut' }}
       className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
     >
-      <div
-        className="glass rounded-full px-5 py-2.5 text-sm font-medium whitespace-nowrap"
-        style={{
-          color: 'var(--ink)',
-          border: '1px solid rgba(168,85,247,0.45)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(168,85,247,0.25)',
-        }}
-      >
+      <div className="glass-therapy rounded-full px-5 py-2.5 text-sm font-medium whitespace-nowrap"
+        style={{ color: '#f8f8ff', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
         {msg}
       </div>
     </motion.div>
   )
 }
 
-/* ────────────────────────────────────────────────────────
-   Crystal Ball (7-layer)
-──────────────────────────────────────────────────────── */
-function CrystalBall() {
+/* ── Crystal Ball — persona 컬러 반영 ─────────────────── */
+function CrystalBall({ persona }: { persona: PersonaKey }) {
+  const theme = getPersona(persona)
+  const accent = theme.color
+  // derive sphere gradient colors from persona
+  const sphereGradient = `radial-gradient(circle at 32% 27%,
+    rgba(255,255,255,0.62) 0%,
+    ${accent}ee 10%,
+    ${accent}cc 28%,
+    ${accent}bb 52%,
+    ${accent}99 72%,
+    rgba(4,1,20,1) 100%)`
+
   return (
     <div className="relative flex items-center justify-center select-none">
-      {/* L1 — outer pulse glow */}
-      <div
-        className="absolute rounded-full animate-pulse-glow pointer-events-none"
-        style={{
-          width: 260, height: 260,
-          background: 'radial-gradient(circle, rgba(168,85,247,0.28) 0%, rgba(107,33,168,0.12) 48%, transparent 70%)',
-        }}
-      />
-      {/* L2 — mid haze */}
-      <div
-        className="absolute rounded-full pointer-events-none"
-        style={{
-          width: 200, height: 200,
-          background: 'radial-gradient(circle, rgba(147,51,234,0.18) 0%, transparent 65%)',
-          filter: 'blur(8px)',
-        }}
-      />
-      {/* L3 — main sphere */}
-      <div
-        className="relative rounded-full shadow-orb animate-float"
-        style={{
-          width: 168, height: 168,
-          background:
-            'radial-gradient(circle at 32% 27%, ' +
-            'rgba(255,255,255,0.62) 0%, rgba(220,165,255,0.92) 10%, ' +
-            'rgba(168,85,247,0.88) 28%, rgba(109,40,217,0.93) 52%, ' +
-            'rgba(76,29,149,0.97) 72%, rgba(10,2,38,1) 100%)',
-        }}
-      >
-        {/* L4 — rotating nebula */}
-        <div
-          className="absolute rounded-full animate-spin-slow pointer-events-none"
-          style={{
-            inset: 22, filter: 'blur(10px)', opacity: 0.60,
-            background:
-              'conic-gradient(from 0deg, rgba(168,85,247,1), rgba(99,102,241,0.5), ' +
-              'rgba(216,180,254,0.85), rgba(139,92,246,0.6), rgba(168,85,247,1))',
-          }}
-        />
-        {/* L5 — primary highlight */}
-        <div
-          className="absolute pointer-events-none"
+      {/* L1 outer pulse glow */}
+      <div className="absolute rounded-full animate-pulse-glow pointer-events-none"
+        style={{ width: 260, height: 260,
+          background: `radial-gradient(circle, ${accent}45 0%, ${accent}1a 48%, transparent 70%)` }} />
+      {/* L2 mid haze */}
+      <div className="absolute rounded-full pointer-events-none"
+        style={{ width: 200, height: 200,
+          background: `radial-gradient(circle, ${accent}2e 0%, transparent 65%)`,
+          filter: 'blur(8px)' }} />
+      {/* L3 main sphere */}
+      <div className="relative rounded-full animate-float"
+        style={{ width: 168, height: 168, background: sphereGradient,
+          boxShadow: `0 0 50px ${accent}88, 0 0 100px ${accent}44, 0 0 180px ${accent}22` }}>
+        {/* L4 rotating nebula */}
+        <div className="absolute rounded-full animate-spin-slow pointer-events-none"
+          style={{ inset: 22, filter: 'blur(10px)', opacity: 0.55,
+            background: `conic-gradient(from 0deg, ${accent}ff, ${accent}80, ${accent}dd, ${accent}99, ${accent}ff)` }} />
+        {/* L5 primary highlight */}
+        <div className="absolute pointer-events-none"
           style={{ top: 12, left: 18, width: 46, height: 30, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.52)', filter: 'blur(8px)' }}
-        />
-        {/* L6 — specular point */}
-        <div
-          className="absolute pointer-events-none"
+            background: 'rgba(255,255,255,0.52)', filter: 'blur(8px)' }} />
+        {/* L6 specular point */}
+        <div className="absolute pointer-events-none"
           style={{ top: 18, left: 28, width: 16, height: 10, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.90)', filter: 'blur(3px)' }}
-        />
-        {/* L7 — rim light */}
-        <div
-          className="absolute pointer-events-none"
+            background: 'rgba(255,255,255,0.90)', filter: 'blur(3px)' }} />
+        {/* L7 rim light */}
+        <div className="absolute pointer-events-none"
           style={{ bottom: 14, right: 16, width: 28, height: 12, borderRadius: '50%',
-            background: 'rgba(216,180,254,0.50)', filter: 'blur(7px)' }}
-        />
+            background: `${accent}80`, filter: 'blur(7px)' }} />
       </div>
     </div>
   )
 }
 
-/* ────────────────────────────────────────────────────────
-   Sparkles
-──────────────────────────────────────────────────────── */
-const SPARKLES = [
+/* ── Sparkles (persona-colored) ─────────────────────────── */
+const SPARKLE_POS = [
   { top: '9%',  left: '8%',   size: 4, delay: 0   },
   { top: '16%', right: '10%', size: 6, delay: 0.8 },
   { top: '5%',  left: '44%',  size: 3, delay: 1.4 },
@@ -114,46 +87,44 @@ const SPARKLES = [
   { top: '72%', left: '22%',  size: 3, delay: 0.6 },
   { top: '28%', right: '22%', size: 2, delay: 2.8 },
 ]
-function Sparkles() {
+function Sparkles({ color }: { color: string }) {
   return (
     <>
-      {SPARKLES.map(({ size, delay, ...pos }, i) => (
-        <div
-          key={i}
+      {SPARKLE_POS.map(({ size, delay, ...pos }, i) => (
+        <div key={i} aria-hidden
           className={`absolute rounded-full pointer-events-none ${i % 2 === 0 ? 'animate-twinkle' : 'animate-twinkle-alt'}`}
-          style={{
-            ...(pos as React.CSSProperties),
-            width: size, height: size,
-            background: 'var(--ink-bright)',
-            animationDelay: `${delay}s`,
-          }}
-        />
+          style={{ ...(pos as React.CSSProperties), width: size, height: size,
+            background: color, animationDelay: `${delay}s` }} />
       ))}
     </>
   )
 }
 
-/* ────────────────────────────────────────────────────────
-   Main Component
-──────────────────────────────────────────────────────── */
-export default function FortuneCard() {
+/* ── Props ─────────────────────────────────────────────── */
+interface FortuneCardProps {
+  fortune: DesignerFortune
+  persona: PersonaKey
+}
+
+/* ── Main Component ─────────────────────────────────────── */
+export default function FortuneCard({ fortune, persona }: FortuneCardProps) {
   const [isFlipped, setIsFlipped]   = useState(false)
-  const [showBack, setShowBack]     = useState(false)
-  const [isSaving, setIsSaving]     = useState(false)
-  const [toastMsg, setToastMsg]     = useState<string | null>(null)
+  const [showBack,  setShowBack]    = useState(false)
+  const [isSaving,  setIsSaving]    = useState(false)
+  const [toastMsg,  setToastMsg]    = useState<string | null>(null)
   const toastTimer                  = useRef<ReturnType<typeof setTimeout>>()
   const cardBackRef                 = useRef<HTMLDivElement>(null)
 
-  const fortune = useMemo(() => generateFortune(), [])
+  const theme        = getPersona(persona)
+  const therapyState = getTherapyState(fortune.energyLevel)
+  const accentColor  = theme.therapy[therapyState].textBright
 
-  /* Toast helper */
   const showToast = useCallback((msg: string) => {
     clearTimeout(toastTimer.current)
     setToastMsg(msg)
     toastTimer.current = setTimeout(() => setToastMsg(null), 2400)
   }, [])
 
-  /* Copy hex to clipboard */
   const handleCopyHex = useCallback(async (hex: string) => {
     try {
       await navigator.clipboard.writeText(hex)
@@ -163,125 +134,99 @@ export default function FortuneCard() {
     }
   }, [showToast])
 
-  /* Save card as PNG via html2canvas */
   const handleSave = useCallback(async () => {
     if (!cardBackRef.current || isSaving) return
     setIsSaving(true)
-
     const el = cardBackRef.current
-    /* Override glassmorphism for clean capture */
-    const prevBg       = el.style.background
-    const prevBd       = el.style.backdropFilter
-    const prevWkBd     = (el.style as CSSStyleDeclaration & { webkitBackdropFilter: string }).webkitBackdropFilter
-    const prevBorder   = el.style.border
-
-    el.style.background       = 'linear-gradient(145deg, #1e0b40 0%, #0e0035 40%, #050018 75%, #030014 100%)'
-    el.style.backdropFilter   = 'none'
+    const prevStyles = { bg: el.style.background, bd: el.style.backdropFilter, border: el.style.border }
+    const bgColor = theme.therapy[therapyState].surface
+    el.style.background     = `linear-gradient(145deg, ${bgColor} 0%, ${theme.therapy[therapyState].bg} 100%)`
+    el.style.backdropFilter = 'none'
     ;(el.style as CSSStyleDeclaration & { webkitBackdropFilter: string }).webkitBackdropFilter = 'none'
-    el.style.border           = '1px solid rgba(168,85,247,0.40)'
-
+    el.style.border         = `1px solid ${theme.therapy[therapyState].border}`
     try {
       const { default: html2canvas } = await import('html2canvas')
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: null,
-        ignoreElements: (node) => node.hasAttribute('data-no-export'),
-      })
-
-      const link        = document.createElement('a')
-      const dateStamp   = new Date().toISOString().slice(0, 10)
-      link.download     = `design-fortune-${dateStamp}.png`
-      link.href         = canvas.toDataURL('image/png')
+      const canvas = await html2canvas(el, { scale: 2, useCORS: true, logging: false, backgroundColor: null,
+        ignoreElements: n => n.hasAttribute('data-no-export') })
+      const link = document.createElement('a')
+      link.download = `fortune-log-${new Date().toISOString().slice(0,10)}.png`
+      link.href = canvas.toDataURL('image/png')
       link.click()
       showToast('✨ 포토카드가 저장되었습니다!')
     } catch {
       showToast('저장 중 오류가 발생했습니다')
     } finally {
-      el.style.background       = prevBg
-      el.style.backdropFilter   = prevBd
-      ;(el.style as CSSStyleDeclaration & { webkitBackdropFilter: string }).webkitBackdropFilter = prevWkBd
-      el.style.border           = prevBorder
+      el.style.background     = prevStyles.bg
+      el.style.backdropFilter = prevStyles.bd
+      el.style.border         = prevStyles.border
       setIsSaving(false)
     }
-  }, [isSaving, showToast])
+  }, [isSaving, showToast, theme, therapyState])
 
-  /* Flip handlers */
   const handleFlip  = () => { if (!isFlipped) setIsFlipped(true) }
   const handleReset = () => { setShowBack(false); setIsFlipped(false) }
 
   return (
     <>
-      {/* Global toast */}
-      <AnimatePresence>
-        {toastMsg && <Toast key="toast" msg={toastMsg} />}
-      </AnimatePresence>
+      <AnimatePresence>{toastMsg && <Toast key="toast" msg={toastMsg} />}</AnimatePresence>
 
-      <div
-        className="relative w-full max-w-[90vw] md:max-w-[360px] h-[590px]"
-        style={{ perspective: '1400px' }}
-      >
+      <div className="relative w-full max-w-[90vw] md:max-w-[360px] h-[590px]"
+        style={{ perspective: '1400px' }}>
         <motion.div
           className="relative w-full h-full preserve-3d"
           animate={{ rotateY: isFlipped ? 180 : 0 }}
           transition={{ duration: 0.85, ease: [0.60, 0.04, 0.02, 0.92] }}
           onAnimationComplete={() => setShowBack(isFlipped)}
         >
-
-          {/* ══ FRONT — 수정구슬 ══ */}
+          {/* ══ FRONT ══ */}
           <div className="absolute inset-0 backface-hidden">
             <div
-              className="glass-card rounded-2xl w-full h-full flex flex-col items-center justify-center gap-8 cursor-pointer select-none relative overflow-hidden"
+              className="glass-therapy-card rounded-2xl w-full h-full flex flex-col items-center justify-center gap-8 cursor-pointer select-none relative overflow-hidden"
               onClick={handleFlip}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleFlip() } }}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleFlip() } }}
               role="button"
               tabIndex={0}
-              aria-label="클릭하여 오늘의 디자인 운세 보기"
+              aria-label={`클릭하여 오늘의 ${theme.role} 운세 보기`}
             >
-              <Sparkles />
-              <div
-                className="absolute inset-0 rounded-2xl pointer-events-none"
-                style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.04) 50%, transparent 70%)' }}
-              />
-              <CrystalBall />
+              <Sparkles color={accentColor} />
+
+              {/* shimmer sweep */}
+              <div className="absolute inset-0 rounded-2xl pointer-events-none"
+                style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.04) 50%, transparent 70%)' }} />
+
+              <CrystalBall persona={persona} />
 
               <div className="text-center z-10 px-8" style={{ marginTop: -8 }}>
-                <p className="font-display text-xs tracking-[0.28em] mb-2" style={{ color: 'var(--ink-bright)' }}>
-                  DESIGN FORTUNE
+                <p className="font-display text-xs tracking-[0.28em] mb-2" style={{ color: accentColor }}>
+                  {theme.emoji} {theme.role.toUpperCase()}
                 </p>
-                <p className="font-serif-ele text-2xl mb-3" style={{ color: 'var(--ink)' }}>
-                  오늘의 디자인 운세
+                <p className="font-serif-ele text-2xl mb-3" style={{ color: '#f8f8ff' }}>
+                  오늘의 운세
                 </p>
                 <div className="flex items-center gap-2 justify-center">
-                  <span className="block h-px w-10" style={{ background: 'var(--ink-bright)', opacity: 0.28 }} />
-                  <p className="text-xs tracking-widest" style={{ color: 'var(--ink-faint)' }}>
+                  <span className="block h-px w-10" style={{ background: accentColor, opacity: 0.28 }} />
+                  <p className="text-xs tracking-widest" style={{ color: '#70709a' }}>
                     수정구슬을 클릭하세요
                   </p>
-                  <span className="block h-px w-10" style={{ background: 'var(--ink-bright)', opacity: 0.28 }} />
+                  <span className="block h-px w-10" style={{ background: accentColor, opacity: 0.28 }} />
                 </div>
               </div>
 
-              <div
-                className="absolute bottom-0 left-0 right-0 h-px"
-                style={{ background: 'linear-gradient(to right, transparent, rgba(168,85,247,0.55), transparent)' }}
-              />
+              {/* bottom accent line */}
+              <div className="absolute bottom-0 left-0 right-0 h-px"
+                style={{ background: `linear-gradient(to right, transparent, ${theme.color}88, transparent)` }} />
             </div>
           </div>
 
-          {/* ══ BACK — 운세 결과 ══ */}
-          <div
-            className="absolute inset-0 backface-hidden"
-            style={{ transform: 'rotateY(180deg)' }}
-          >
-            <div
-              ref={cardBackRef}
-              className="glass-card rounded-2xl w-full h-full overflow-hidden"
-            >
+          {/* ══ BACK ══ */}
+          <div className="absolute inset-0 backface-hidden" style={{ transform: 'rotateY(180deg)' }}>
+            <div ref={cardBackRef}
+              className="glass-therapy-card rounded-2xl w-full h-full overflow-hidden">
               <AnimatePresence>
                 {showBack && (
                   <BackContent
                     fortune={fortune}
+                    persona={persona}
                     onReset={handleReset}
                     onSave={handleSave}
                     onCopyHex={handleCopyHex}
@@ -291,7 +236,6 @@ export default function FortuneCard() {
               </AnimatePresence>
             </div>
           </div>
-
         </motion.div>
       </div>
     </>
