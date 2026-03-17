@@ -62,7 +62,17 @@ export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSa
   )
 
   return (
-    <motion.div className="w-full h-full flex flex-col p-4" initial="hidden" animate="show">
+    <motion.div className="w-full h-full flex flex-col" initial="hidden" animate="show">
+
+      {/* ── 상단 팔레트 컬러 스트립 ── */}
+      <div className="flex flex-shrink-0 overflow-hidden" style={{ height: 7, borderRadius: '1rem 1rem 0 0' }}>
+        {fortune.palette.colors.map((sw) => (
+          <div key={sw.hex} className="flex-1" style={{ background: sw.hex }} />
+        ))}
+      </div>
+
+      {/* ── 나머지 콘텐츠 (패딩 적용) ── */}
+      <div className="flex flex-col flex-1 p-4 min-h-0 overflow-hidden relative">
 
       {/* ── 글로우 플래시 — 카드 뒤집힐 때 한 번 빛남 ── */}
       <motion.div
@@ -125,21 +135,30 @@ export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSa
           🎨 행운의 팔레트
           <span className="ml-1.5 normal-case tracking-normal font-400 text-[9px]" style={{ opacity: 0.6 }}>— 클릭해서 복사</span>
         </p>
-        <div className="flex gap-2 mb-1">
+        <div className="flex gap-1.5 mb-1.5">
           {fortune.palette.colors.map((sw) => (
             <button key={sw.hex} data-no-export="true"
               onClick={() => handleCopy(sw.hex)}
-              className="flex flex-col items-center gap-1 group cursor-pointer"
+              className="flex-1 flex flex-col items-center gap-1 cursor-pointer group"
               aria-label={`${sw.hex} 복사`}>
-              <div className="rounded-full swatch-ring relative overflow-hidden"
-                style={{ width: 32, height: 32, background: sw.hex }}>
+              <div className="w-full rounded-xl relative overflow-hidden"
+                style={{ height: 46, background: sw.hex,
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.35)',
+                  transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                }}>
+                <div className="absolute inset-0 pointer-events-none"
+                  style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, transparent 55%)' }} />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                  style={{ background: 'rgba(0,0,0,0.25)' }}>
+                  <span style={{ fontSize: 11, color: '#fff' }}>copy</span>
+                </div>
                 <AnimatePresence>
                   {copiedHex === sw.hex && (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}
-                      className="absolute inset-0 flex items-center justify-center rounded-full"
-                      style={{ background: 'rgba(0,0,0,0.55)' }}>
-                      <span style={{ fontSize: 12, color: '#fff' }}>✓</span>
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      className="absolute inset-0 flex items-center justify-center rounded-xl"
+                      style={{ background: 'rgba(0,0,0,0.50)' }}>
+                      <span style={{ fontSize: 15, color: '#fff' }}>✓</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -200,7 +219,7 @@ export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSa
       </motion.div>
 
       {/* ── 5: 액션 버튼 ── */}
-      <motion.div variants={dealVariant(4)} className="flex gap-2 flex-shrink-0" data-no-export="true">
+      <motion.div variants={dealVariant(4)} className="flex gap-2 flex-shrink-0 mt-auto" data-no-export="true">
         <button onClick={onSave} disabled={isSaving}
           className="flex-1 py-2 rounded-md text-xs tracking-wide transition-all duration-200 flex items-center justify-center gap-1.5"
           style={{
@@ -223,6 +242,8 @@ export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSa
           ↩
         </button>
       </motion.div>
+
+      </div>{/* end padded content */}
     </motion.div>
   )
 }

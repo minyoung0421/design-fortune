@@ -25,67 +25,18 @@ function Toast({ msg }: { msg: string }) {
   )
 }
 
-/* ── Crystal Ball — persona 컬러 반영 ─────────────────── */
-function CrystalBall({ persona }: { persona: PersonaKey }) {
-  const theme = getPersona(persona)
-  const accent = theme.color
-  // derive sphere gradient colors from persona
-  const sphereGradient = `radial-gradient(circle at 32% 27%,
-    rgba(255,255,255,0.62) 0%,
-    ${accent}ee 10%,
-    ${accent}cc 28%,
-    ${accent}bb 52%,
-    ${accent}99 72%,
-    rgba(4,1,20,1) 100%)`
-
-  return (
-    <div className="relative flex items-center justify-center select-none">
-      {/* L1 outer pulse glow */}
-      <div className="absolute rounded-full animate-pulse-glow pointer-events-none"
-        style={{ width: 260, height: 260,
-          background: `radial-gradient(circle, ${accent}45 0%, ${accent}1a 48%, transparent 70%)` }} />
-      {/* L2 mid haze */}
-      <div className="absolute rounded-full pointer-events-none"
-        style={{ width: 200, height: 200,
-          background: `radial-gradient(circle, ${accent}2e 0%, transparent 65%)`,
-          filter: 'blur(8px)' }} />
-      {/* L3 main sphere */}
-      <div className="relative rounded-full animate-float"
-        style={{ width: 168, height: 168, background: sphereGradient,
-          boxShadow: `0 0 50px ${accent}88, 0 0 100px ${accent}44, 0 0 180px ${accent}22` }}>
-        {/* L4 rotating nebula */}
-        <div className="absolute rounded-full animate-spin-slow pointer-events-none"
-          style={{ inset: 22, filter: 'blur(10px)', opacity: 0.55,
-            background: `conic-gradient(from 0deg, ${accent}ff, ${accent}80, ${accent}dd, ${accent}99, ${accent}ff)` }} />
-        {/* L5 primary highlight */}
-        <div className="absolute pointer-events-none"
-          style={{ top: 12, left: 18, width: 46, height: 30, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.52)', filter: 'blur(8px)' }} />
-        {/* L6 specular point */}
-        <div className="absolute pointer-events-none"
-          style={{ top: 18, left: 28, width: 16, height: 10, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.90)', filter: 'blur(3px)' }} />
-        {/* L7 rim light */}
-        <div className="absolute pointer-events-none"
-          style={{ bottom: 14, right: 16, width: 28, height: 12, borderRadius: '50%',
-            background: `${accent}80`, filter: 'blur(7px)' }} />
-      </div>
-    </div>
-  )
-}
-
-/* ── Sparkles (persona-colored) ─────────────────────────── */
+/* ── Sparkles ────────────────────────────────────────── */
 const SPARKLE_POS = [
-  { top: '9%',  left: '8%',   size: 4, delay: 0   },
-  { top: '16%', right: '10%', size: 6, delay: 0.8 },
-  { top: '5%',  left: '44%',  size: 3, delay: 1.4 },
-  { bottom: '18%', left: '6%',   size: 4, delay: 0.3 },
-  { bottom: '11%', right: '12%', size: 6, delay: 1.7 },
-  { top: '38%', left: '3%',   size: 2, delay: 2.2 },
-  { top: '60%', right: '5%',  size: 4, delay: 1.1 },
-  { bottom: '40%', left: '15%', size: 2, delay: 1.9 },
-  { top: '72%', left: '22%',  size: 3, delay: 0.6 },
-  { top: '28%', right: '22%', size: 2, delay: 2.8 },
+  { top: '9%',  left: '8%',   size: 3, delay: 0   },
+  { top: '14%', right: '9%',  size: 5, delay: 0.8 },
+  { top: '4%',  left: '44%',  size: 2, delay: 1.4 },
+  { bottom: '16%', left: '5%',   size: 3, delay: 0.3 },
+  { bottom: '10%', right: '11%', size: 5, delay: 1.7 },
+  { top: '55%', left: '3%',   size: 2, delay: 2.2 },
+  { top: '62%', right: '4%',  size: 3, delay: 1.1 },
+  { bottom: '38%', left: '14%', size: 2, delay: 1.9 },
+  { top: '74%', left: '20%',  size: 2, delay: 0.6 },
+  { top: '30%', right: '20%', size: 2, delay: 2.8 },
 ]
 function Sparkles({ color }: { color: string }) {
   return (
@@ -118,6 +69,7 @@ export default function FortuneCard({ fortune, persona }: FortuneCardProps) {
   const theme        = getPersona(persona)
   const therapyState = getTherapyState(fortune.energyLevel)
   const accentColor  = theme.therapy[therapyState].textBright
+  const accent       = theme.therapy[therapyState].accent
 
   const showToast = useCallback((msg: string) => {
     clearTimeout(toastTimer.current)
@@ -178,10 +130,11 @@ export default function FortuneCard({ fortune, persona }: FortuneCardProps) {
           transition={{ duration: 0.85, ease: [0.60, 0.04, 0.02, 0.92] }}
           onAnimationComplete={() => setShowBack(isFlipped)}
         >
+
           {/* ══ FRONT ══ */}
           <div className="absolute inset-0 backface-hidden">
             <div
-              className="glass-therapy-card rounded-2xl w-full h-full flex flex-col items-center justify-center gap-5 cursor-pointer select-none relative overflow-hidden"
+              className="glass-therapy-card rounded-2xl w-full h-full flex flex-col cursor-pointer select-none relative overflow-hidden"
               onClick={handleFlip}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleFlip() } }}
               role="button"
@@ -190,50 +143,119 @@ export default function FortuneCard({ fortune, persona }: FortuneCardProps) {
             >
               <Sparkles color={accentColor} />
 
-              {/* shimmer sweep */}
-              <div className="absolute inset-0 rounded-2xl pointer-events-none"
-                style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.04) 50%, transparent 70%)' }} />
+              {/* ── 팔레트 컬러 스트립 (카드 상단 35%) ── */}
+              <div className="relative flex-shrink-0 overflow-hidden"
+                style={{ height: 178, borderRadius: '1rem 1rem 0 0' }}>
 
-              {/* ── 마스코트 + 말풍선 영역 ── */}
-              <div className="flex flex-col items-center gap-2 z-10">
+                {/* 5색 수직 스트립 */}
+                <div className="flex w-full h-full">
+                  {fortune.palette.colors.map((sw, i) => (
+                    <div key={sw.hex} className="flex-1 relative"
+                      style={{ background: sw.hex }}>
+                      {/* top sheen */}
+                      <div className="absolute inset-0 pointer-events-none"
+                        style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.20) 0%, transparent 45%)' }} />
+                      {/* subtle separator */}
+                      {i < fortune.palette.colors.length - 1 && (
+                        <div className="absolute right-0 top-0 bottom-0 w-px"
+                          style={{ background: 'rgba(0,0,0,0.18)' }} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* bottom gradient fade into card */}
+                <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
+                  style={{ height: 72,
+                    background: 'linear-gradient(to top, rgba(8,3,24,0.90) 0%, rgba(8,3,24,0.40) 55%, transparent 100%)' }} />
+
+                {/* FortuneLog label — top */}
+                <div className="absolute top-3 left-0 right-0 flex justify-center pointer-events-none">
+                  <p className="font-cute text-[9px] tracking-[0.38em] uppercase"
+                    style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    ✦ FortuneLog ✦
+                  </p>
+                </div>
+
+                {/* palette name badge — bottom */}
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center z-10 pointer-events-none">
+                  <div className="px-3.5 py-1 rounded-full font-cute text-[11px] font-bold tracking-wide"
+                    style={{
+                      background: 'rgba(0,0,0,0.48)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      color: '#f8f8ff',
+                      border: '1px solid rgba(255,255,255,0.14)',
+                    }}>
+                    🎨 {fortune.palette.name}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── 중간: 이모지 + 말풍선 ── */}
+              <div className="flex flex-col items-center gap-2.5 flex-1 justify-center px-6">
+
                 {/* 말풍선 */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8, y: 6 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.4, ease: [0.22, 1.2, 0.36, 1] }}
+                  transition={{ delay: 0.35, duration: 0.4, ease: [0.22, 1.2, 0.36, 1] }}
                 >
                   <div className="speech-bubble">
-                    <p className="font-cute text-xs font-600 whitespace-nowrap"
+                    <p className="font-cute text-xs font-semibold whitespace-nowrap"
                       style={{ color: '#f8f8ff' }}>
                       {theme.speech}
                     </p>
                   </div>
                 </motion.div>
 
-                {/* 마스코트 이모지 — 통통 튀기 */}
+                {/* 마스코트 이모지 */}
                 <motion.div
                   className="text-5xl"
                   animate={{ y: [0, -10, 0], rotate: [0, -6, 6, 0] }}
                   transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}
+                  style={{ filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.45))' }}
                 >
                   {theme.emoji}
                 </motion.div>
+
+                {/* 에너지 */}
+                <div className="flex items-center gap-2">
+                  <span className="font-cute text-[10px]" style={{ color: '#70709a' }}>에너지</span>
+                  <div className="flex gap-1">
+                    {[1,2,3,4,5].map(i => (
+                      <div key={i} className="rounded-full"
+                        style={{
+                          width: 7, height: 7,
+                          background: i <= fortune.energyLevel ? accent : 'rgba(255,255,255,0.14)',
+                          boxShadow: i <= fortune.energyLevel ? `0 0 6px ${accent}88` : 'none',
+                          transition: 'background 0.3s',
+                        }} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* 운세 미리보기 */}
+                <p className="font-serif-ele text-[11px] italic text-center leading-snug px-2"
+                  style={{ color: 'rgba(255,255,255,0.48)' }}>
+                  {fortune.fortuneMsg.length > 44
+                    ? fortune.fortuneMsg.slice(0, 44) + '…'
+                    : fortune.fortuneMsg}
+                </p>
               </div>
 
-              <CrystalBall persona={persona} />
-
-              <div className="text-center z-10 px-8">
-                <p className="font-cute font-700 text-xs tracking-wider mb-1.5" style={{ color: accentColor }}>
-                  {theme.role}의 오늘 운세
-                </p>
-                <div className="flex items-center gap-2 justify-center">
-                  <span className="block h-px w-8" style={{ background: accentColor, opacity: 0.30 }} />
-                  <p className="font-cute text-xs" style={{ color: '#70709a' }}>
-                    수정구슬을 클릭하세요
-                  </p>
-                  <span className="block h-px w-8" style={{ background: accentColor, opacity: 0.30 }} />
-                </div>
+              {/* ── 하단: 탭 프롬프트 ── */}
+              <div className="flex-shrink-0 flex items-center justify-center gap-2 pb-5 pt-1">
+                <span className="block h-px w-8" style={{ background: accentColor, opacity: 0.22 }} />
+                <motion.p
+                  className="font-cute text-[11px]"
+                  style={{ color: '#70709a' }}
+                  animate={{ opacity: [0.6, 1, 0.6] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  탭해서 오늘의 운세 확인하기
+                </motion.p>
+                <span className="block h-px w-8" style={{ background: accentColor, opacity: 0.22 }} />
               </div>
 
               {/* bottom accent line */}
@@ -260,6 +282,7 @@ export default function FortuneCard({ fortune, persona }: FortuneCardProps) {
               </AnimatePresence>
             </div>
           </div>
+
         </motion.div>
       </div>
     </>
