@@ -7,23 +7,14 @@ import { saveFortuneEntry, todayStr } from '@/lib/history'
 import type { DesignerFortune } from '@/lib/fortune-data'
 import type { PersonaKey } from '@/types/persona'
 
-/* ── 포커 딜 variants — 각 섹션이 중앙에서 날아오며 정착 ── */
-const DEAL_ORIGINS = [
-  { x: -60, y: -40, rotate: -8 },   // 운세 메시지 — 좌상
-  { x:  60, y: -30, rotate:  7 },   // 팔레트       — 우상
-  { x: -50, y:  30, rotate: -5 },   // 폰트         — 좌하
-  { x:  50, y:  40, rotate:  6 },   // 격언         — 우하
-  { x:   0, y: -20, rotate:  0 },   // 액션 버튼    — 중앙위
-]
-
+/* ── 캐스케이드 리빌 variants — 아래에서 부드럽게 올라오며 정착 ── */
 function dealVariant(i: number) {
-  const o = DEAL_ORIGINS[i] ?? DEAL_ORIGINS[0]
   return {
-    hidden: { opacity: 0, scale: 0.55, x: o.x, y: o.y, rotate: o.rotate },
+    hidden: { opacity: 0, y: 18, scale: 0.97 },
     show: {
-      opacity: 1, scale: 1, x: 0, y: 0, rotate: 0,
-      transition: { delay: i * 0.12 + 0.05, duration: 0.45,
-        ease: [0.22, 1.2, 0.36, 1] },  // spring-like overshoot
+      opacity: 1, y: 0, scale: 1,
+      transition: { delay: i * 0.10 + 0.06, duration: 0.40,
+        ease: [0.22, 1, 0.36, 1] },
     },
   }
 }
@@ -72,6 +63,15 @@ export function BackContent({ fortune, persona, onReset, onSave, onCopyHex, isSa
 
   return (
     <motion.div className="w-full h-full flex flex-col p-4" initial="hidden" animate="show">
+
+      {/* ── 글로우 플래시 — 카드 뒤집힐 때 한 번 빛남 ── */}
+      <motion.div
+        className="absolute inset-0 rounded-2xl pointer-events-none z-20"
+        initial={{ opacity: 0.55 }}
+        animate={{ opacity: 0 }}
+        transition={{ duration: 0.55, ease: 'easeOut' }}
+        style={{ background: `radial-gradient(ellipse at 50% 40%, ${accent}55 0%, ${accent}18 55%, transparent 75%)` }}
+      />
 
       {/* ── 0: Header ── */}
       <motion.div variants={dealVariant(0)}

@@ -1,161 +1,313 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PERSONAS } from '@/lib/persona-data'
-import { savePersona } from '@/lib/history'
-import type { PersonaKey } from '@/types/persona'
+import { useRouter } from 'next/navigation'
 import StarField from '@/components/StarField'
+import FortuneCard from '@/components/FortuneCard'
+import { PERSONAS, getPersona, getTherapyState, THERAPY_LABELS } from '@/lib/persona-data'
+import { savePersona, loadPersona } from '@/lib/history'
+import { generateFortune } from '@/lib/fortune-data'
+import { getTherapyVars } from '@/lib/color-therapy'
+import type { PersonaKey } from '@/types/persona'
 
 const PERSONA_ORDER: PersonaKey[] = ['pm', 'designer', 'developer', 'qa']
+type View = 'select' | 'fortune'
 
-export default function PersonaSelector() {
-  const router = useRouter()
-  const [selected, setSelected] = useState<PersonaKey | null>(null)
-  const [leaving, setLeaving] = useState(false)
+/* ── 페르소나 선택 화면 ──────────────────────────────────── */
+function SelectView({ onSelect }: { onSelect: (key: PersonaKey) => void }) {
+  const [tapped, setTapped] = useState<PersonaKey | null>(null)
 
-  const handleSelect = (key: PersonaKey) => {
-    if (leaving) return
-    setSelected(key)
-    setLeaving(true)
-    savePersona(key)
-    setTimeout(() => router.push('/fortune/'), 480)
+  const handleTap = (key: PersonaKey) => {
+    if (tapped) return
+    setTapped(key)
+    setTimeout(() => onSelect(key), 360)
   }
 
   return (
-    <main
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 py-10"
-      style={{ background: '#030014' }}
+    <motion.div
+      key="select"
+      className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-10"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.3 } }}
     >
-      <StarField />
+      {/* 헤더 */}
+      <motion.header
+        className="text-center mb-8"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        <motion.div
+          className="text-5xl mb-3 inline-block"
+          animate={{ y: [0, -8, 0], rotate: [0, -5, 5, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          🔮
+        </motion.div>
+        <p className="font-cute text-[11px] font-semibold tracking-[0.28em] uppercase mb-2"
+          style={{ color: 'rgba(192,132,252,0.7)' }}>
+          FortuneLog
+        </p>
+        <h1 className="font-cute font-extrabold leading-tight mb-1.5"
+          style={{ fontSize: '1.85rem', color: '#f8f8ff' }}>
+          오늘 나의 직군은?
+        </h1>
+        <p className="font-cute text-sm" style={{ color: '#b4b4d4' }}>
+          직군을 선택하면 맞춤 컬러테라피가 시작돼요
+        </p>
+      </motion.header>
 
-      {/* ── 배경 글로우 ── */}
-      <div aria-hidden className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full"
-          style={{ width: 700, height: 380, top: -100,
-            background: 'radial-gradient(ellipse, rgba(147,51,234,0.18) 0%, transparent 70%)',
-            filter: 'blur(60px)' }} />
-      </div>
+      {/* 카드 그리드 */}
+      <motion.div
+        className="grid grid-cols-2 gap-3 w-full max-w-sm"
+        initial="hidden"
+        animate="show"
+        variants={{ show: { transition: { staggerChildren: 0.09 } } }}
+      >
+        {PERSONA_ORDER.map((key) => {
+          const p = PERSONAS[key]
+          const isSelected = tapped === key
+          const isFaded   = tapped !== null && !isSelected
 
-      <div className="relative z-10 w-full max-w-sm mx-auto flex flex-col items-center gap-7">
+          return (
+            <motion.button
+              key={key}
+              variants={{
+                hidden: { opacity: 0, y: 28, scale: 0.88 },
+                show:   { opacity: 1, y: 0,  scale: 1,
+                  transition: { duration: 0.45, ease: [0.22, 1.2, 0.36, 1] } },
+              }}
+              animate={
+                isSelected ? { scale: 1.1, opacity: 1 } :
+                isFaded    ? { scale: 0.93, opacity: 0.35 } : {}
+              }
+              whileHover={!tapped ? { scale: 1.04, y: -3 } : {}}
+              whileTap={!tapped ? { scale: 0.97 } : {}}
+              transition={{ duration: 0.25 }}
+              onClick={() => handleTap(key)}
+              className="relative flex flex-col items-center gap-2.5 p-5 rounded-3xl text-center cursor-pointer overflow-hidden"
+              style={{
+                background: p.cardGradient,
+                boxShadow: isSelected
+                  ? `0 0 0 3px #fff, 0 8px 32px ${p.color}99`
+                  : `0 6px 24px ${p.color}44`,
+              }}
+              aria-label={`${p.role} 선택`}
+            >
+              <div className="absolute inset-0 rounded-3xl pointer-events-none"
+                style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%)' }} />
 
-        {/* ── 헤더 ── */}
+              <motion.span
+                className="relative text-4xl"
+                animate={isSelected
+                  ? { rotate: [0, -15, 15, -8, 0], scale: [1, 1.3, 1.1] }
+                  : { rotate: [0, -5, 5, 0] }}
+                transition={isSelected
+                  ? { duration: 0.4 }
+                  : { duration: 4, repeat: Infinity, delay: PERSONA_ORDER.indexOf(key) * 0.6 }}
+              >
+                {p.emoji}
+              </motion.span>
+
+              <div>
+                <p className="font-cute font-extrabold text-base text-white leading-tight">{p.role}</p>
+                <p className="font-cute text-xs font-semibold mt-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>{p.label}</p>
+              </div>
+
+              <p className="font-cute text-[11px] leading-snug px-1" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                "{p.tagline}"
+              </p>
+
+              <div className="w-6 h-1 rounded-full mt-0.5" style={{ background: 'rgba(255,255,255,0.40)' }} />
+            </motion.button>
+          )
+        })}
+      </motion.div>
+
+      <motion.p
+        className="font-cute text-xs text-center mt-7"
+        style={{ color: '#70709a' }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
+      >
+        매일 자정 컬러테라피가 갱신됩니다 ✦
+      </motion.p>
+    </motion.div>
+  )
+}
+
+/* ── 포춘 화면 ───────────────────────────────────────────── */
+function FortuneView({
+  persona,
+  fortune,
+  onChangePersona,
+}: {
+  persona: PersonaKey
+  fortune: ReturnType<typeof generateFortune>
+  onChangePersona: () => void
+}) {
+  const router      = useRouter()
+  const theme       = getPersona(persona)
+  const therapyState = getTherapyState(fortune.energyLevel)
+  const therapyLabel = THERAPY_LABELS[therapyState]
+
+  return (
+    <motion.div
+      key="fortune"
+      className="relative z-10 min-h-screen flex flex-col items-center justify-center"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -16, transition: { duration: 0.28 } }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {/* 상단 네비 */}
+      <motion.nav
+        className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-6 pb-3"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.4 }}
+      >
+        <button
+          onClick={onChangePersona}
+          className="font-cute text-xs font-semibold tracking-wide transition-opacity hover:opacity-70 flex items-center gap-1"
+          style={{ color: theme.therapy[therapyState].textBright }}
+        >
+          ← 직군 바꾸기
+        </button>
+
+        <div className="flex items-center gap-1.5">
+          <span style={{ fontSize: '1rem' }}>{theme.emoji}</span>
+          <span className="font-cute text-xs font-bold" style={{ color: '#f8f8ff' }}>{theme.role}</span>
+        </div>
+
+        <button
+          onClick={() => router.push('/history/')}
+          className="font-cute text-xs font-semibold tracking-wide transition-opacity hover:opacity-70"
+          style={{ color: theme.therapy[therapyState].textBright }}
+        >
+          히스토리 →
+        </button>
+      </motion.nav>
+
+      {/* 콘텐츠 */}
+      <div className="flex flex-col items-center gap-7 px-4 py-8 w-full max-w-lg mx-auto mt-10">
         <motion.header
           className="text-center"
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          transition={{ delay: 0.15, duration: 0.45, ease: 'easeOut' }}
         >
-          {/* 마스코트 아이콘 */}
-          <motion.div
-            className="text-5xl mb-3 inline-block"
-            animate={{ y: [0, -8, 0], rotate: [0, -5, 5, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            🔮
-          </motion.div>
-
-          <p className="font-cute text-[11px] font-700 tracking-[0.30em] uppercase mb-2"
-            style={{ color: 'rgba(192,132,252,0.7)' }}>
-            FortuneLog
+          <p className="font-display text-[10px] tracking-[0.35em] uppercase mb-3"
+            style={{ color: theme.therapy[therapyState].textBright, opacity: 0.7 }}>
+            ✦ &nbsp; FortuneLog &nbsp; ✦
           </p>
-          <h1 className="font-cute font-800 leading-tight mb-1.5"
-            style={{ fontSize: '1.9rem', color: '#f8f8ff' }}>
-            오늘 나의 직군은?
+          <h1 className="font-serif-ele leading-tight mb-2" style={{ fontSize: '2.6rem', color: '#f8f8ff' }}>
+            오늘의<br />
+            <span style={{
+              color: theme.therapy[therapyState].textBright,
+              textShadow: `0 0 20px ${theme.therapy[therapyState].glow}, 0 0 45px ${theme.therapy[therapyState].glow}`,
+            }}>
+              {theme.role} 운세
+            </span>
           </h1>
-          <p className="font-cute text-sm" style={{ color: '#b4b4d4' }}>
-            직군을 선택하면 맞춤 컬러테라피가 시작돼요
-          </p>
+          <p className="font-cute text-xs tracking-wide" style={{ color: '#70709a' }}>{therapyLabel}</p>
         </motion.header>
 
-        {/* ── 페르소나 카드 그리드 ── */}
-        <AnimatePresence>
-          {!leaving && (
-            <motion.div
-              className="grid grid-cols-2 gap-3 w-full"
-              initial="hidden"
-              animate="show"
-              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
-              variants={{ show: { transition: { staggerChildren: 0.09 } } }}
-            >
-              {PERSONA_ORDER.map((key) => {
-                const p = PERSONAS[key]
-                const isSelected = selected === key
+        <FortuneCard fortune={fortune} persona={persona} />
 
-                return (
-                  <motion.button
-                    key={key}
-                    variants={{
-                      hidden: { opacity: 0, y: 30, scale: 0.88 },
-                      show:   { opacity: 1, y: 0,  scale: 1,
-                        transition: { duration: 0.45, ease: [0.22, 1.2, 0.36, 1] } },
-                    }}
-                    whileHover={{ scale: 1.04, y: -3 }}
-                    whileTap={{ scale: 0.96 }}
-                    animate={isSelected ? { scale: 1.08, opacity: 1 } : {}}
-                    onClick={() => handleSelect(key)}
-                    className="relative flex flex-col items-center gap-2.5 p-5 rounded-3xl text-center cursor-pointer overflow-hidden"
-                    style={{
-                      background: p.cardGradient,
-                      boxShadow: isSelected
-                        ? `0 0 0 3px #fff, 0 8px 30px ${p.color}99`
-                        : `0 6px 24px ${p.color}44`,
-                    }}
-                    aria-label={`${p.role} 선택`}
-                  >
-                    {/* 카드 내부 하이라이트 */}
-                    <div className="absolute inset-0 rounded-3xl pointer-events-none"
-                      style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%)' }} />
-
-                    {/* 이모지 */}
-                    <motion.span
-                      className="relative text-4xl"
-                      animate={{ rotate: [0, -6, 6, 0] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut',
-                        delay: PERSONA_ORDER.indexOf(key) * 0.6 }}
-                    >
-                      {p.emoji}
-                    </motion.span>
-
-                    {/* 직군명 */}
-                    <div>
-                      <p className="font-cute font-800 text-base text-white leading-tight">
-                        {p.role}
-                      </p>
-                      <p className="font-cute text-xs font-600 mt-0.5"
-                        style={{ color: 'rgba(255,255,255,0.65)' }}>
-                        {p.label}
-                      </p>
-                    </div>
-
-                    {/* 태그라인 */}
-                    <p className="font-cute text-[11px] leading-snug px-1"
-                      style={{ color: 'rgba(255,255,255,0.75)' }}>
-                      "{p.tagline}"
-                    </p>
-
-                    {/* 하단 포인트 */}
-                    <div className="w-6 h-1 rounded-full mt-0.5"
-                      style={{ background: 'rgba(255,255,255,0.40)' }} />
-                  </motion.button>
-                )
-              })}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── 하단 안내 ── */}
-        <motion.p
-          className="font-cute text-xs text-center"
-          style={{ color: '#70709a' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-        >
-          매일 자정 컬러테라피가 갱신됩니다 ✦
-        </motion.p>
+        <p className="font-cute text-xs tracking-wider text-center" style={{ color: '#70709a' }}>
+          운세는 매일 자정에 갱신됩니다
+        </p>
       </div>
+
+      {/* 하단 페이드 */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
+        style={{ background: 'linear-gradient(to top, var(--t-bg, #030014), transparent)' }} />
+    </motion.div>
+  )
+}
+
+/* ── Root App ─────────────────────────────────────────────── */
+export default function App() {
+  const [view,    setView]    = useState<View>('select')
+  const [persona, setPersona] = useState<PersonaKey | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const saved = loadPersona()
+    if (saved) { setPersona(saved); setView('fortune') }
+    setMounted(true)
+  }, [])
+
+  const fortune = useMemo(() =>
+    persona && mounted ? generateFortune(persona) : null,
+    [persona, mounted]
+  )
+
+  const therapyState = fortune && persona ? getTherapyState(fortune.energyLevel) : 'balance'
+  const cssVars = fortune && persona ? getTherapyVars(persona, fortune.energyLevel) : null
+  const theme   = persona ? getPersona(persona) : null
+
+  const handleSelect = (key: PersonaKey) => {
+    savePersona(key)
+    setPersona(key)
+    setTimeout(() => setView('fortune'), 360)
+  }
+
+  const handleChangePersona = () => {
+    setView('select')
+  }
+
+  if (!mounted) return <div className="min-h-screen" style={{ background: '#030014' }} />
+
+  return (
+    <main
+      className="therapy-root relative min-h-screen overflow-hidden"
+      style={(view === 'fortune' && cssVars ? cssVars : { '--t-bg': '#030014' }) as React.CSSProperties}
+    >
+      {/* 배경 별 */}
+      <StarField accentColor={
+        view === 'fortune' && theme && fortune
+          ? theme.therapy[therapyState].glow
+          : undefined
+      } />
+
+      {/* 글로우 블롭 */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none">
+        {view === 'fortune' && theme ? (
+          <>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full"
+              style={{ width: 680, height: 420, top: -90,
+                background: `radial-gradient(circle, ${theme.therapy[therapyState].glow.replace(/[\d.]+\)$/, '0.20)')} 0%, transparent 70%)`,
+                filter: 'blur(55px)' }} />
+            <div className="absolute bottom-0 left-1/4 rounded-full"
+              style={{ width: 340, height: 340, bottom: -70,
+                background: `radial-gradient(circle, ${theme.therapy[therapyState].glow.replace(/[\d.]+\)$/, '0.10)')} 0%, transparent 65%)`,
+                filter: 'blur(55px)' }} />
+          </>
+        ) : (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full"
+            style={{ width: 680, height: 380, top: -100,
+              background: 'radial-gradient(ellipse, rgba(147,51,234,0.16) 0%, transparent 70%)',
+              filter: 'blur(60px)' }} />
+        )}
+      </div>
+
+      {/* 뷰 전환 */}
+      <AnimatePresence mode="wait">
+        {view === 'select' && (
+          <SelectView key="select" onSelect={handleSelect} />
+        )}
+        {view === 'fortune' && fortune && persona && (
+          <FortuneView
+            key="fortune"
+            persona={persona}
+            fortune={fortune}
+            onChangePersona={handleChangePersona}
+          />
+        )}
+      </AnimatePresence>
     </main>
   )
 }
